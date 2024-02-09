@@ -1,1 +1,1 @@
-l
+local Players = game.Player.LocalPlayer
