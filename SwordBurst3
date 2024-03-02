@@ -1,0 +1,174 @@
+local MobsList = {
+	[14819490378] = {
+		"Razor Boar",
+		"Tortoise",
+		"Wolf",
+		"Brown Bear",
+		"Rock Golem",
+		"Crystal Boar",
+		"Thunder Sakura Moose",
+	}
+}
+
+local Floors = {
+	["New Arcadia"] = 14819493140,
+	["Floor 1"] = 14819490378,
+	["Floor 2"] = 15695929915,
+	["Floor 3"] = 16582687738,
+}
+
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local PlaceID = game.PlaceId
+
+
+
+local Window = Fluent:CreateWindow({
+	Title = "Jason HUB 1.0",
+	SubTitle = "| SwordBurst 3",
+	TabWidth = 160,
+	Size = UDim2.fromOffset(580, 460),
+	Acrylic = false, -- The blur may be detectable, setting this to false disables blur entirely
+	Theme = "Aqua",
+	MinimizeKey = Enum.KeyCode.Semicolon -- Used when theres no MinimizeKeybind
+})
+
+--Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
+local Tabs = {
+	Autofarm = Window:AddTab({ Title = "Autofarm", Icon = "repeat" }),
+	AutofarmConfig = Window:AddTab({ Title = "Autofarm Config", Icon = "repeat" }),
+	Combat = Window:AddTab({ Title = "Combat", Icon = "sword" }),
+	Teleports = Window:AddTab({ Title = "Teleports", Icon = "map-pin" }),
+}
+
+Window:SelectTab(1) -- Picks Autofarm as Starting Tab
+
+do
+	-- Autofarm Tab
+	local MobDropdown = Tabs.Autofarm:AddDropdown("Dropdown", {
+		Title = "Select Mob",
+		Description = "Select Mob to Farm",
+		Values = {"WIP"},
+		Multi = false,
+		Default = "--"
+	})
+	
+	local QuestDropdown = Tabs.Autofarm:AddDropdown("Dropdown", {
+		Title = "Select Quest",
+		Description = "Select Quest to AutoQuest",
+		Values = {"WIP"},
+		Multi = false,
+		Default = "--"
+	})
+	
+	local MobToggle = Tabs.Autofarm:AddToggle("MyToggle", {
+		Title = "Auto Selected Mob",
+		Description = "Enabled/Disabled to Farm Selected Mob",
+		Default = false ,
+		Callback = function(Value)
+			print("Toggle was changed:", Value)
+		end
+	})
+	
+	local QuestToggle = Tabs.Autofarm:AddToggle("MyToggle", {
+		Title = "Auto Selected Quest",
+		Description = "Enabled/Disabled to Farm Selected Quest",
+		Default = false ,
+		Callback = function(Value)
+			print("Toggle was changed:", Value)
+		end
+	})
+	
+	local OreToggle = Tabs.Autofarm:AddToggle("MyToggle", {
+		Title = "Auto Farm Ores",
+		Description = "Teleport to Ores (Turn on to Auto Collect)",
+		Default = false ,
+		Callback = function(Value)
+			print("Toggle was changed:", Value)
+		end
+	})
+	
+	local DropsToggle = Tabs.Autofarm:AddToggle("MyToggle", {
+		Title = "Auto Collect Drops",
+		Description = "Collect all drops from mobs",
+		Default = false ,
+		Callback = function(Value)
+			print("Toggle was changed:", Value)
+		end
+	})
+
+	
+	-- Auto Farm Config Tab
+	local PositionDropdown = Tabs.AutofarmConfig:AddDropdown("Dropdown", {
+		Title = "Farm Position",
+		Description = "Select Farm Position",
+		Values = {"Below", "Above", "Behind"},
+		Multi = false,
+		Default = 1
+	})
+	
+	local DistanceSlider = Tabs.AutofarmConfig:AddSlider("Slider", {
+		Title = "Farm Distance",
+		Description = "Adjust the distance to a mob",
+		Default = 5,
+		Min = 5,
+		Max = 10,
+		Rounding = 1,
+		Callback = function(Value)
+			print("Slider was changed:", Value)
+		end
+	})
+	
+	-- Combat Tab
+	local TimerSlider = Tabs.Combat:AddSlider("Slider", {
+		Title = "Kill Aura Speed",
+		Description = "Time between player Attacks",
+		Default = 0.5,
+		Min = 0.35,
+		Max = 1,
+		Rounding = 2,
+		Callback = function(Value)
+			print("Slider was changed:", Value)
+		end
+	})
+	
+	local DistanceSlider = Tabs.Combat:AddSlider("Slider", {
+		Title = "Kill Aura Range",
+		Description = "Set How Far Kill Aura Reaches",
+		Default = 20,
+		Min = 10,
+		Max = 100,
+		Rounding = 1,
+		Callback = function(Value)
+			print("Slider was changed:", Value)
+		end
+	})
+	
+	local AuraToggle = Tabs.Combat:AddToggle("MyToggle", {
+		Title = "Kill Aura",
+		Description = "Targets All Mobs In Range",
+		Default = false ,
+		Callback = function(Value)
+			print("Toggle was changed:", Value)
+		end
+	})
+	
+	-- Teleport Tab
+	local ArenaDropdown = Tabs.Teleports:AddDropdown("Dropdown", {
+		Title = "Boss Arenas",
+		Description = "Chose Arena to Teleport To",
+		Values = {"Below", "Above", "Behind"},
+		Multi = false,
+		Default = "--"
+	})
+	local FloorDropdown = Tabs.Teleports:AddDropdown("Dropdown", {
+		Title = "Floor Teleport",
+		Description = "Chose Floor to Teleport To",
+		Values = {"New Arcadia", "Floor 1", "Floor 2", "Floor 3"},
+		Multi = false,
+		Default = "--"
+	})
+	
+	FloorDropdown:OnChanged(function(Value)
+		game:GetService("TeleportService"):Teleport(Floors[Value])
+	end)
+end
