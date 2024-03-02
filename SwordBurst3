@@ -10,12 +10,33 @@ local MobsList = {
 	}
 }
 
+local Bosses = {
+	[14819490378] = {
+		"Hagan",
+		"Galiard",
+		"Elron The Frenzy Lord"
+	},
+	[15695929915] = {
+
+	},
+	[16582687738] = {
+
+	},
+}
+
 local Floors = {
 	["New Arcadia"] = 14819493140,
 	["Floor 1"] = 14819490378,
 	["Floor 2"] = 15695929915,
 	["Floor 3"] = 16582687738,
 }
+
+-- Player Info
+local Player = game.Players.LocalPlayer
+local Character = Player.Character
+local Humanoid = Character.Humanoid
+local Humrp = Character.PrimaryPart
+
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local PlaceID = game.PlaceId
@@ -156,7 +177,7 @@ do
 	local ArenaDropdown = Tabs.Teleports:AddDropdown("Dropdown", {
 		Title = "Boss Arenas",
 		Description = "Chose Arena to Teleport To",
-		Values = {"Below", "Above", "Behind"},
+		Values = Bosses[game.PlaceId],
 		Multi = false,
 		Default = "--"
 	})
@@ -168,7 +189,14 @@ do
 		Default = "--"
 	})
 	
+	ArenaDropdown:OnChanged(function(Value)
+		local BossArenaFolder = workspace["BossArenas"][Value]
+		local Position = BossArenaFolder["Spawn"].Position
+		Character:MoveTo(Position)
+	end)
+	
 	FloorDropdown:OnChanged(function(Value)
 		game:GetService("TeleportService"):Teleport(Floors[Value])
 	end)
+	
 end
