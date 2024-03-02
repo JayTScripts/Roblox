@@ -257,7 +257,7 @@ do
 			while AutoFarmOptions.mobToggleOn do
 				
 				for _, v in pairs(workspace.Mobs:GetChildren()) do
-					if v.Name == AutoFarmOptions.mob and AutoFarmOptions.mobToggleOn then
+					if (v.Name == AutoFarmOptions.mob or v.Name == "Giant "..AutoFarmOptions.mob) and AutoFarmOptions.mobToggleOn then
 						local mobHumrp = v.PrimaryPart
 						if not mobHumrp then continue end -- Skips If Mob Is Dead
 						local mobCFrame = mobHumrp.CFrame
@@ -323,7 +323,18 @@ do
 		Description = "Collect all drops from mobs",
 		Default = false ,
 		Callback = function(Value)
-			print("Toggle was changed:", Value)
+			AutoFarmOptions.dropsToggleOn = Value
+			
+			while AutoFarmOptions.dropsToggleOn  do
+				
+				for _, v in pairs(game.ReplicatedStorage.Drops:GetChildren()) do
+					if v:IsA("Folder")  then
+						print(v.Name)
+						game:GetService("ReplicatedStorage").Systems.Drops.Pickup:FireServer(v)
+					end
+				end
+				wait(2)
+			end
 		end
 	})
 
