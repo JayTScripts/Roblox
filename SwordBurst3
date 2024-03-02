@@ -24,6 +24,40 @@ local Bosses = {
 	},
 }
 
+local Quests = {
+	[14819490378] = {
+		"A New Adventure [LVL 1]",
+		"Angry Beach Shells [LVL 2]]",
+		"Clearing the path [LVL 3]",
+		"Wolf Problem [LVL 4]",
+		"Quick Repairs [LVL 5]",
+		"Hungry Bears [LVL 7]",
+		"Rocky Foes [LVL 9]",
+		"Blasting Rocks [LVL 10]",
+		"Intense Moose [LVL 15]",
+		"The Tower Dungeon [LVL 20]",
+		"The Slimy Poison [LVL 22]",
+		"The Final Boss [LVL 23]",
+		"Minion Hunt [LVL 20]",
+	},
+}
+
+local QuestEquivalency = {
+	["A New Adventure [LVL 1]"] = 1,
+	["Angry Beach Shells [LVL 2]]"] = 3,
+	["Clearing the path [LVL 3]"] = 5,
+	["Wolf Problem [LVL 4]"] = 123,
+	["Quick Repairs [LVL 5]"] = 123,
+	["Hungry Bears [LVL 7]"] = 12,
+	["Rocky Foes [LVL 9]"] = 12,
+	["Blasting Rocks [LVL 10]"] =144,
+	["Intense Moose [LVL 15]"] = -12,
+	["The Tower Dungeon [LVL 20]"] = 1023,
+	["The Slimy Poison [LVL 22]"] = 1238,
+	["The Final Boss [LVL 23]"] = 12389,
+	["Minion Hunt [LVL 20]"] = 123,
+}
+
 local Floors = {
 	["New Arcadia"] = 14819493140,
 	["Floor 1"] = 14819490378,
@@ -34,9 +68,19 @@ local Floors = {
 -- Player Info
 local Player = game.Players.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
-local Humanoid = Character.Humanoid
-local Humrp = Character.PrimaryPart
 
+local Humanoid = Character:WaitForChild("Humanoid")
+local Humrp = Character:WaitForChild("HumanoidRootPart")
+
+Player.CharacterAdded:Connect(function(Char)
+	Character = Char
+	Humanoid = Char:WaitForChild("Humanoid")
+	Humrp = Char:WaitForChild("HumanoidRootPart")
+end)
+
+
+
+local TS = game:GetService("TweenService")
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local PlaceID = game.PlaceId
@@ -48,7 +92,7 @@ local CombatSettings = {
 }
 
 local AutoFarmConfig = {
-	direction = nil,
+	direction = "Below",
 	distance = nil,
 }
 
@@ -111,11 +155,11 @@ do
 	local QuestDropdown = Tabs.Autofarm:AddDropdown("Dropdown", {
 		Title = "Select Quest",
 		Description = "Select Quest to AutoQuest",
-		Values = {"WIP"},
+		Values = Quests[game.PlaceId],
 		Multi = false,
 		Default = "--",
 		Callback = function(Value)
-			AutoFarmOptions.quest = Value
+			AutoFarmOptions.quest = QuestEquivalency[Value]
 		end
 	})
 	
@@ -124,7 +168,44 @@ do
 		Description = "Enabled/Disabled to Farm Selected Mob",
 		Default = false ,
 		Callback = function(Value)
-			print("Toggle was changed:", Value)
+			AutoFarmOptions.mobToggleOn = Value
+			while AutoFarmOptions.mobToggleOn do
+				
+				for _, v in pairs(workspace.Mobs:GetChildren()) do
+					if v.Name == AutoFarmOptions.mob and AutoFarmOptions.mobToggleOn then
+						local mobHumrp = v.PrimaryPart
+						if not mobHumrp then continue end -- Skips If Mob Is Dead
+						local mobCFrame = mobHumrp.CFrame
+						local offset = CFrame.new(0,0,0)
+						local weld = Instance.new("WeldConstraint", mobHumrp)
+						
+						print(Humrp.CFrame)
+						
+						if AutoFarmConfig.direction == "Below" then
+							offset = CFrame.new(0,AutoFarmConfig.distance * -1 ,0)
+						elseif AutoFarmConfig.direction == "Above"  then
+							offset = CFrame.new(0,AutoFarmConfig.distance,0)
+						elseif AutoFarmConfig.direction == "Behind" then
+							offset = CFrame.new(0,0,AutoFarmConfig.distance)
+						end
+						
+						local Tween = TS:Create(Humrp, TweenInfo.new(1), {CFrame = mobCFrame * offset})
+						Tween:Play()
+						Tween.Completed:Connect(function()
+							weld.Part0 = mobHumrp
+							weld.Part1 = Humrp
+						end)
+						
+						
+						repeat task.wait(0.5) until v.Parent == nil or not AutoFarmOptions.mobToggleOn
+						
+						if weld then weld:Destroy() end -- Destroys weld if player turned off autofarm before killing mob
+					end
+					
+				end
+				wait(1)
+				
+			end
 		end
 	})
 	
@@ -133,7 +214,13 @@ do
 		Description = "Enabled/Disabled to Farm Selected Quest",
 		Default = false ,
 		Callback = function(Value)
-			print("Toggle was changed:", Value)
+			AutoFarmOptions.questToggleOn = Value
+			while AutoFarmOptions.questToggleOn do
+				game:GetService("ReplicatedStorage").Systems.Quests.CompleteQuest:FireServer(AutoFarmOptions.quest)
+				wait(0.5)
+				game:GetService("ReplicatedStorage").Systems.Quests.AcceptQuest:FireServer(AutoFarmOptions.quest)
+				wait(3)
+			end
 		end
 	})
 	
@@ -171,8 +258,8 @@ do
 	local DistanceSlider = Tabs.AutofarmConfig:AddSlider("Slider", {
 		Title = "Farm Distance",
 		Description = "Adjust the distance to a mob",
-		Default = 5,
-		Min = 5,
+		Default = 6,
+		Min = 6,
 		Max = 10,
 		Rounding = 1,
 		Callback = function(Value)
@@ -211,6 +298,8 @@ do
 		Default = false ,
 		Callback = function(Value)
 			CombatSettings.active = Value
+			print("Kill Aura")
+			print(Value)
 			while CombatSettings.active  do
 				
 				local parms = OverlapParams.new()
