@@ -33,7 +33,7 @@ local Floors = {
 
 -- Player Info
 local Player = game.Players.LocalPlayer
-local Character = Player.Character
+local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character.Humanoid
 local Humrp = Character.PrimaryPart
 
