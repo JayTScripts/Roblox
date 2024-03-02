@@ -7,7 +7,38 @@ local MobsList = {
 		"Rock Golem",
 		"Crystal Boar",
 		"Thunder Sakura Moose",
-	}
+		"Frenzy Knight",
+		"Soldier Boar",
+		"Basilisk",
+		"Hagan",
+		"Gailard",
+		"Elron the Frenzy Lord"
+	},
+	[15695929915] = {
+		"Fire Wasp",
+		"Ember Jaguar",
+		"Lava Basilisk",
+		"Skeleton Boar",
+		"Fiery Moose",
+		"Magma Golem",
+		"Phoenix",
+		"Fire Imp",
+		"Hell Hound",
+		"Roaring Ogre",
+		"Erebus",
+		"Pathos The Fire Lord"
+	},
+	[16582687738] = {
+		"Mist Bunny",
+		"Penguin",
+		"Frost Scorpion",
+		"Snow Kitsune",
+		"Chill Bat",
+		"Polar Bear",
+		"Cold Mammoth",
+		"Alpha Icewhal",
+		"Yeti"
+	},
 }
 
 local Bosses = {
@@ -17,17 +48,20 @@ local Bosses = {
 		"Elron The Frenzy Lord"
 	},
 	[15695929915] = {
-
+		"Roaring Ogre",
+		"Erebus",
+		"Pathos The Fire Lord"
 	},
 	[16582687738] = {
-
+		"Alpha Icewhal",
+		"Yeti"
 	},
 }
 
 local Quests = {
 	[14819490378] = {
 		"A New Adventure [LVL 1]",
-		"Angry Beach Shells [LVL 2]]",
+		"Angry Beach Shells [LVL 2]",
 		"Clearing the path [LVL 3]",
 		"Wolf Problem [LVL 4]",
 		"Quick Repairs [LVL 5]",
@@ -35,27 +69,78 @@ local Quests = {
 		"Rocky Foes [LVL 9]",
 		"Blasting Rocks [LVL 10]",
 		"Intense Moose [LVL 15]",
+		"Minion Hunt [LVL 20]",
 		"The Tower Dungeon [LVL 20]",
 		"The Slimy Poison [LVL 22]",
 		"The Final Boss [LVL 23]",
-		"Minion Hunt [LVL 20]",
+
+	},
+	[15695929915] = {
+		"Stinging Problem [LVL 23]",
+		"Jaguar Hunt [LVL 25]",
+		"Slithering Ruins [LVL 28]",
+		"Cave of the Dead [LVL 30]",
+		"Moose Mayhem [LVL 33]",
+		"Rocky Lava [LVL 36]",
+		"Azure Feathers [LVL 38]",
+		"The Fire Tower [LVL 40]",
+		"Fire Minions [LVL 40]",
+		"Hell Beasts [LVL 42]",
+		"The Fire Lord [LVL 43]",
+	},
+	[16582687738] = {
+		"Fluffy Terrors [LVL 43]",
+		"Winter Waddle [LVL 45]",
+		"Icy Stingers [LVL 48]",
+		"Two Tailed Foxes [LVL 50]",
+		"Chilly Caves [LVL 50]",
+		"Melting The Ice [LVL 51]",
+		"Polar Plunge [LVL 56]",
+		"Massive Mammoths [LVL 58]",
 	},
 }
 
 local QuestEquivalency = {
+	-- Floor 1
 	["A New Adventure [LVL 1]"] = 1,
-	["Angry Beach Shells [LVL 2]]"] = 3,
+	["Angry Beach Shells [LVL 2]"] = 3,
 	["Clearing the path [LVL 3]"] = 5,
-	["Wolf Problem [LVL 4]"] = 123,
-	["Quick Repairs [LVL 5]"] = 123,
-	["Hungry Bears [LVL 7]"] = 12,
-	["Rocky Foes [LVL 9]"] = 12,
-	["Blasting Rocks [LVL 10]"] =144,
-	["Intense Moose [LVL 15]"] = -12,
-	["The Tower Dungeon [LVL 20]"] = 1023,
-	["The Slimy Poison [LVL 22]"] = 1238,
-	["The Final Boss [LVL 23]"] = 12389,
-	["Minion Hunt [LVL 20]"] = 123,
+	["Wolf Problem [LVL 4]"] = 2,
+	["Quick Repairs [LVL 5]"] = 8,
+	["Hungry Bears [LVL 7]"] = 4,
+	["Rocky Foes [LVL 9]"] = 7,
+	["Blasting Rocks [LVL 10]"] = 9,
+	["Glowing Boar [LVL 12]"] = 10,
+	["Intense Moose [LVL 15]"] = 11,
+	["The Tower Dungeon [LVL 20]"] = 6,
+	["Minion Hunt [LVL 20]"] = 13,
+	["The Slimy Poison [LVL 22]"] = 14,
+	["The Final Boss [LVL 23]"] = 12,
+
+	
+	-- Floor 2
+	["Stinging Problem [LVL 23]"] = 15,
+	["Jaguar Hunt [LVL 25]"] = 16,
+	["Slithering Ruins [LVL 28]"] = 17,
+	["Cave of the Dead [LVL 30]"] = 18,
+	["Moose Mayhem [LVL 33]"] = 19,
+	["Rocky Lava [LVL 36]"] = 20,
+	["Azure Feathers [LVL 38]"] = 21,
+	["The Fire Tower [LVL 40]"] = 22,
+	["Fire Minions [LVL 40]"] = 23,
+	["Hell Beasts [LVL 42]"] = 24,
+	["The Fire Lord [LVL 43]"] = 25,
+	
+	-- Floor 3
+	["Fluffy Terrors [LVL 43]"] = 26,
+	["Winter Waddle [LVL 45]"] = 27,
+	["Icy Stingers [LVL 48]"] = 28,
+	["Two Tailed Foxes [LVL 50]"] = 29,
+	["Chilly Caves [LVL 50]"] = 30,
+	["Melting The Ice [LVL 51]"] = 31,
+	["Polar Plunge [LVL 56]"] = 32,
+	["Massive Mammoths [LVL 58]"] = 33,
+
 }
 
 local Floors = {
@@ -197,7 +282,7 @@ do
 						end)
 						
 						
-						repeat task.wait(0.5) until v.Parent == nil or not AutoFarmOptions.mobToggleOn
+						repeat task.wait() until v.Parent == nil or not AutoFarmOptions.mobToggleOn
 						
 						if weld then weld:Destroy() end -- Destroys weld if player turned off autofarm before killing mob
 					end
