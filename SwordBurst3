@@ -41,6 +41,38 @@ local Humrp = Character.PrimaryPart
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local PlaceID = game.PlaceId
 
+local CombatSettings = {
+	waitTime = 0,
+	range = 0,
+	active = false
+}
+
+local AutoFarmConfig = {
+	direction = nil,
+	distance = nil,
+}
+
+local AutoFarmOptions = {
+	mob = nil,
+	quest = nil,
+	mobToggleOn = nil,
+	questToggleOn = nil,
+	oreToggleOn = nil,
+	dropsToggleOn = nil
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 local Window = Fluent:CreateWindow({
@@ -68,9 +100,12 @@ do
 	local MobDropdown = Tabs.Autofarm:AddDropdown("Dropdown", {
 		Title = "Select Mob",
 		Description = "Select Mob to Farm",
-		Values = {"WIP"},
+		Values = MobsList[game.PlaceId],
 		Multi = false,
-		Default = "--"
+		Default = "--",
+		Callback = function(Value)
+			AutoFarmOptions.mob = Value
+		end
 	})
 	
 	local QuestDropdown = Tabs.Autofarm:AddDropdown("Dropdown", {
@@ -78,7 +113,10 @@ do
 		Description = "Select Quest to AutoQuest",
 		Values = {"WIP"},
 		Multi = false,
-		Default = "--"
+		Default = "--",
+		Callback = function(Value)
+			AutoFarmOptions.quest = Value
+		end
 	})
 	
 	local MobToggle = Tabs.Autofarm:AddToggle("MyToggle", {
@@ -124,7 +162,10 @@ do
 		Description = "Select Farm Position",
 		Values = {"Below", "Above", "Behind"},
 		Multi = false,
-		Default = 1
+		Default = 1,
+		Callback = function(Value)
+			AutoFarmConfig.direction = Value
+		end
 	})
 	
 	local DistanceSlider = Tabs.AutofarmConfig:AddSlider("Slider", {
@@ -135,7 +176,7 @@ do
 		Max = 10,
 		Rounding = 1,
 		Callback = function(Value)
-			print("Slider was changed:", Value)
+			AutoFarmConfig.distance = Value
 		end
 	})
 	
@@ -148,7 +189,7 @@ do
 		Max = 1,
 		Rounding = 2,
 		Callback = function(Value)
-			print("Slider was changed:", Value)
+			CombatSettings.waitTime = Value
 		end
 	})
 	
@@ -157,10 +198,10 @@ do
 		Description = "Set How Far Kill Aura Reaches",
 		Default = 20,
 		Min = 10,
-		Max = 100,
+		Max = 50,
 		Rounding = 1,
 		Callback = function(Value)
-			print("Slider was changed:", Value)
+			CombatSettings.range = Value
 		end
 	})
 	
@@ -169,7 +210,31 @@ do
 		Description = "Targets All Mobs In Range",
 		Default = false ,
 		Callback = function(Value)
-			print("Toggle was changed:", Value)
+			CombatSettings.active = Value
+			while CombatSettings.active  do
+				
+				local parms = OverlapParams.new()
+				parms.FilterDescendantsInstances = workspace["Mobs"]:GetChildren()
+				parms.FilterType = Enum.RaycastFilterType.Include
+				
+				local mobsInRange = workspace:GetPartBoundsInRadius(Humrp.Position, CombatSettings.range, parms)
+				
+				local MobsToHit = {}
+				
+				--Loops Through And Gets Mob To Hit
+				for _, v in pairs(mobsInRange) do
+					local Mob = v.Parent
+					if Mob:IsA("Model") then
+						Mob.HumanoidRootPart.Size = Vector3.new(CombatSettings.range*2,CombatSettings.range*2,CombatSettings.range*2)
+						table.insert(MobsToHit, Mob)
+					end
+				end
+				
+				game:GetService("ReplicatedStorage").Systems.Combat.PlayerAttack:FireServer(MobsToHit)
+				
+				
+				wait(CombatSettings.waitTime)
+			end
 		end
 	})
 	
@@ -190,12 +255,14 @@ do
 	})
 	
 	ArenaDropdown:OnChanged(function(Value)
+		if Value == "--" then return end
 		local BossArenaFolder = workspace["BossArenas"][Value]
 		local Position = BossArenaFolder["Spawn"].Position
 		Character:MoveTo(Position)
 	end)
 	
 	FloorDropdown:OnChanged(function(Value)
+		if Value == "--" then return end
 		game:GetService("TeleportService"):Teleport(Floors[Value])
 	end)
 	
