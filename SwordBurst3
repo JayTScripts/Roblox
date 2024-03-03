@@ -404,6 +404,7 @@ do
 		Default = false ,
 		Callback = function(Value)
 			CombatSettings.active = Value
+			Humrp.CanCollide = not Value
 			print("Kill Aura")
 			print(Value)
 			while CombatSettings.active  do
