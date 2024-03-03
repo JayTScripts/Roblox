@@ -168,6 +168,7 @@ end)
 local TS = game:GetService("TweenService")
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 local PlaceID = game.PlaceId
 
 local CombatSettings = {
@@ -214,15 +215,19 @@ local Window = Fluent:CreateWindow({
 	MinimizeKey = Enum.KeyCode.Semicolon -- Used when theres no MinimizeKeybind
 })
 
+
+
 --Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
 local Tabs = {
 	Autofarm = Window:AddTab({ Title = "Autofarm", Icon = "repeat" }),
 	AutofarmConfig = Window:AddTab({ Title = "Autofarm Config", Icon = "repeat" }),
 	Combat = Window:AddTab({ Title = "Combat", Icon = "sword" }),
 	Teleports = Window:AddTab({ Title = "Teleports", Icon = "map-pin" }),
+	Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
 }
 
 Window:SelectTab(1) -- Picks Autofarm as Starting Tab
+
 
 do
 	-- Autofarm Tab
@@ -267,9 +272,9 @@ do
 						print(Humrp.CFrame)
 						
 						if AutoFarmConfig.direction == "Below" then
-							offset = CFrame.new(0,AutoFarmConfig.distance * -1 ,0)
+							offset = CFrame.new(0,(AutoFarmConfig.distance + 4)* -1 ,0)
 						elseif AutoFarmConfig.direction == "Above"  then
-							offset = CFrame.new(0,AutoFarmConfig.distance,0)
+							offset = CFrame.new(0,AutoFarmConfig.distance + 4,0)
 						elseif AutoFarmConfig.direction == "Behind" then
 							offset = CFrame.new(0,0,AutoFarmConfig.distance)
 						end
@@ -311,7 +316,7 @@ do
 	
 	local OreToggle = Tabs.Autofarm:AddToggle("MyToggle", {
 		Title = "Auto Farm Ores",
-		Description = "Teleport to Ores (Turn on to Auto Collect)",
+		Description = "Teleport to Ores (Turn on to Auto Collect) NOT IMPLEMENTED YET",
 		Default = false ,
 		Callback = function(Value)
 			print("Toggle was changed:", Value)
@@ -451,4 +456,9 @@ do
 		game:GetService("TeleportService"):Teleport(Floors[Value])
 	end)
 	
+	-- Settings Tab
+	InterfaceManager:SetLibrary(Fluent)
+	InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+	
+
 end
