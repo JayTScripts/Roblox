@@ -175,7 +175,6 @@ local CombatSettings = {
 	waitTime = 0,
 	range = 0,
 	active = false,
-	playerTarget = false
 }
 
 local AutoFarmConfig = {
@@ -190,6 +189,13 @@ local AutoFarmOptions = {
 	questToggleOn = nil,
 	oreToggleOn = nil,
 	dropsToggleOn = nil
+}
+
+local PVPSettings = {
+	waitTime = 0,
+	range = 0,
+	active = false,
+	
 }
 
 
@@ -207,7 +213,7 @@ local AutoFarmOptions = {
 
 
 local Window = Fluent:CreateWindow({
-	Title = "Jason HUB v1.1",
+	Title = "Jason HUB v1.2",
 	SubTitle = "| SwordBurst 3",
 	TabWidth = 160,
 	Size = UDim2.fromOffset(580, 460),
@@ -378,8 +384,8 @@ do
 	local TimerSlider = Tabs.Combat:AddSlider("Slider", {
 		Title = "Kill Aura Speed",
 		Description = "Time between player Attacks",
-		Default = 0.5,
-		Min = 0.35,
+		Default = 0.35,
+		Min = 0.25,
 		Max = 1,
 		Rounding = 2,
 		Callback = function(Value)
@@ -390,7 +396,7 @@ do
 	local DistanceSlider = Tabs.Combat:AddSlider("Slider", {
 		Title = "Kill Aura Range",
 		Description = "Set How Far Kill Aura Reaches",
-		Default = 20,
+		Default = 50,
 		Min = 10,
 		Max = 50,
 		Rounding = 1,
@@ -411,23 +417,7 @@ do
 
 				local parms = OverlapParams.new()
 
-
-				if CombatSettings.playerTarget then
-					local targets = {}
-					for _, v in pairs(workspace["Mobs"]:GetChildren()) do
-						table.insert(targets, v)
-					end
-
-					for _, v in pairs(workspace["Characters"]:GetChildren()) do
-						if v.Name ~= Character.Name then
-							table.insert(targets,v)
-						end
-					end
-					parms.FilterDescendantsInstances = targets
-
-				else
-					parms.FilterDescendantsInstances = workspace["Mobs"]:GetChildren()
-				end
+				parms.FilterDescendantsInstances = workspace["Mobs"]:GetChildren()
 
 				parms.FilterType = Enum.RaycastFilterType.Include
 
@@ -439,8 +429,10 @@ do
 				for _, v in pairs(mobsInRange) do
 					local Mob = v.Parent
 					if Mob:IsA("Model") then
-						Mob.HumanoidRootPart.Size = Vector3.new(CombatSettings.range*2,CombatSettings.range*2,CombatSettings.range*2)
-						Mob.HumanoidRootPart.CanCollide = false
+						local MobRP = Mob.HumanoidRootPart
+						if not MobRP then continue end -- Continues if MobRP doesn't exist
+						MobRP.Size = Vector3.new(CombatSettings.range*2,CombatSettings.range*2,CombatSettings.range*2)
+						MobRP.HumanoidRootPart.CanCollide = false
 						table.insert(MobsToHit, Mob)
 					end
 				end
@@ -469,13 +461,13 @@ do
 
 	local speedSlider = Tabs.PVP:AddSlider("Slider", {
 		Title = "Kill Aura Speed",
-		Description = "Time between player Attacks",
-		Default = 0.5,
-		Min = 0.35,
+		Description = "Time between swings",
+		Default = 0.35,
+		Min = 0.25,
 		Max = 1,
 		Rounding = 2,
 		Callback = function(Value)
-			--
+			PVPSettings.waitTime = Value
 		end
 	})
 
@@ -484,10 +476,10 @@ do
 		Description = "Set How Far Kill Aura Reaches",
 		Default = 20,
 		Min = 10,
-		Max = 50,
+		Max = 200,
 		Rounding = 1,
 		Callback = function(Value)
-			--
+			PVPSettings.range = Value
 		end
 	})
 	local playerToggle = Tabs.PVP:AddToggle("MyToggle", {
@@ -495,12 +487,12 @@ do
 		Description = "Kill Aura Effects Players",
 		Default = false ,
 		Callback = function(Value)
-			CombatSettings.playerTarget = Value
+			PVPSettings.active = Value
 		end
 	})
 	local refreshButton = Tabs.PVP:AddButton({
-		Title = "Test",
-		Description = "asdasd",
+		Title = "Refresh",
+		Description = "Refreshes Player List",
 		Callback = function()
 
 		end,
