@@ -117,7 +117,7 @@ local QuestEquivalency = {
 	["The Slimy Poison [LVL 22]"] = 14,
 	["The Final Boss [LVL 23]"] = 12,
 
-	
+
 	-- Floor 2
 	["Stinging Problem [LVL 23]"] = 15,
 	["Jaguar Hunt [LVL 25]"] = 16,
@@ -130,7 +130,7 @@ local QuestEquivalency = {
 	["Fire Minions [LVL 40]"] = 23,
 	["Hell Beasts [LVL 42]"] = 24,
 	["The Fire Lord [LVL 43]"] = 25,
-	
+
 	-- Floor 3
 	["Fluffy Terrors [LVL 43]"] = 26,
 	["Winter Waddle [LVL 45]"] = 27,
@@ -207,7 +207,7 @@ local AutoFarmOptions = {
 
 
 local Window = Fluent:CreateWindow({
-	Title = "Jason HUB 1.0",
+	Title = "Jason HUB v1.1",
 	SubTitle = "| SwordBurst 3",
 	TabWidth = 160,
 	Size = UDim2.fromOffset(580, 460),
@@ -222,7 +222,8 @@ local Window = Fluent:CreateWindow({
 local Tabs = {
 	Autofarm = Window:AddTab({ Title = "Autofarm", Icon = "repeat" }),
 	AutofarmConfig = Window:AddTab({ Title = "Autofarm Config", Icon = "repeat" }),
-	Combat = Window:AddTab({ Title = "Combat", Icon = "sword" }),
+	Combat = Window:AddTab({ Title = "Combat (Mobs)", Icon = "dog" }),
+	PVP = Window:AddTab({ Title = "Combat (PVP) WIP", Icon = "swords" }),
 	Teleports = Window:AddTab({ Title = "Teleports", Icon = "map-pin" }),
 	Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
 }
@@ -242,7 +243,7 @@ do
 			AutoFarmOptions.mob = Value
 		end
 	})
-	
+
 	local QuestDropdown = Tabs.Autofarm:AddDropdown("Dropdown", {
 		Title = "Select Quest",
 		Description = "Select Quest to AutoQuest",
@@ -253,7 +254,7 @@ do
 			AutoFarmOptions.quest = QuestEquivalency[Value]
 		end
 	})
-	
+
 	local MobToggle = Tabs.Autofarm:AddToggle("MyToggle", {
 		Title = "Auto Selected Mob",
 		Description = "Enabled/Disabled to Farm Selected Mob",
@@ -261,7 +262,7 @@ do
 		Callback = function(Value)
 			AutoFarmOptions.mobToggleOn = Value
 			while AutoFarmOptions.mobToggleOn do
-				
+
 				for _, v in pairs(workspace.Mobs:GetChildren()) do
 					if (v.Name == AutoFarmOptions.mob or v.Name == "Giant "..AutoFarmOptions.mob) and AutoFarmOptions.mobToggleOn then
 						local mobHumrp = v.PrimaryPart
@@ -269,9 +270,9 @@ do
 						local mobCFrame = mobHumrp.CFrame
 						local offset = CFrame.new(0,0,0)
 						local weld = Instance.new("WeldConstraint", mobHumrp)
-						
+
 						print(Humrp.CFrame)
-						
+
 						if AutoFarmConfig.direction == "Below" then
 							offset = CFrame.new(0,(AutoFarmConfig.distance + 7)* -1 ,0)
 						elseif AutoFarmConfig.direction == "Above"  then
@@ -279,27 +280,31 @@ do
 						elseif AutoFarmConfig.direction == "Behind" then
 							offset = CFrame.new(0,0,AutoFarmConfig.distance)
 						end
-						
+
 						local Tween = TS:Create(Humrp, TweenInfo.new(1), {CFrame = mobCFrame * offset})
 						Tween:Play()
 						Tween.Completed:Connect(function()
 							weld.Part0 = mobHumrp
 							weld.Part1 = Humrp
 						end)
-						
-						
-						repeat task.wait() until v.Parent == nil or not AutoFarmOptions.mobToggleOn
-						
+
+						local Timer = 0
+
+						repeat 
+							task.wait(0.5) 
+							Timer += 0.5
+						until v.Parent == nil or not AutoFarmOptions.mobToggleOn or Timer > 15 -- Possible Bug Here
+
 						if weld then weld:Destroy() end -- Destroys weld if player turned off autofarm before killing mob
 					end
-					
+
 				end
 				wait(1)
-				
+
 			end
 		end
 	})
-	
+
 	local QuestToggle = Tabs.Autofarm:AddToggle("MyToggle", {
 		Title = "Auto Selected Quest",
 		Description = "Enabled/Disabled to Farm Selected Quest",
@@ -308,13 +313,13 @@ do
 			AutoFarmOptions.questToggleOn = Value
 			while AutoFarmOptions.questToggleOn do
 				game:GetService("ReplicatedStorage").Systems.Quests.CompleteQuest:FireServer(AutoFarmOptions.quest)
-				wait(0.5)
+				wait(1)
 				game:GetService("ReplicatedStorage").Systems.Quests.AcceptQuest:FireServer(AutoFarmOptions.quest)
-				wait(3)
+				wait(3.5)
 			end
 		end
 	})
-	
+
 	local OreToggle = Tabs.Autofarm:AddToggle("MyToggle", {
 		Title = "Auto Farm Ores",
 		Description = "Teleport to Ores (Turn on to Auto Collect) NOT IMPLEMENTED YET",
@@ -323,16 +328,16 @@ do
 			print("Toggle was changed:", Value)
 		end
 	})
-	
+
 	local DropsToggle = Tabs.Autofarm:AddToggle("MyToggle", {
 		Title = "Auto Collect Drops",
 		Description = "Collect all drops from mobs",
 		Default = false ,
 		Callback = function(Value)
 			AutoFarmOptions.dropsToggleOn = Value
-			
+
 			while AutoFarmOptions.dropsToggleOn  do
-				
+
 				for _, v in pairs(game.ReplicatedStorage.Drops:GetChildren()) do
 					if v:IsA("Folder")  then
 						print(v.Name)
@@ -344,7 +349,7 @@ do
 		end
 	})
 
-	
+
 	-- Auto Farm Config Tab
 	local PositionDropdown = Tabs.AutofarmConfig:AddDropdown("Dropdown", {
 		Title = "Farm Position",
@@ -356,7 +361,7 @@ do
 			AutoFarmConfig.direction = Value
 		end
 	})
-	
+
 	local DistanceSlider = Tabs.AutofarmConfig:AddSlider("Slider", {
 		Title = "Farm Distance",
 		Description = "Adjust the distance to a mob",
@@ -368,7 +373,7 @@ do
 			AutoFarmConfig.distance = Value
 		end
 	})
-	
+
 	-- Combat Tab
 	local TimerSlider = Tabs.Combat:AddSlider("Slider", {
 		Title = "Kill Aura Speed",
@@ -381,7 +386,7 @@ do
 			CombatSettings.waitTime = Value
 		end
 	})
-	
+
 	local DistanceSlider = Tabs.Combat:AddSlider("Slider", {
 		Title = "Kill Aura Range",
 		Description = "Set How Far Kill Aura Reaches",
@@ -393,7 +398,7 @@ do
 			CombatSettings.range = Value
 		end
 	})
-	
+
 	local AuraToggle = Tabs.Combat:AddToggle("MyToggle", {
 		Title = "Kill Aura",
 		Description = "Targets All Mobs In Range",
@@ -403,33 +408,33 @@ do
 			print("Kill Aura")
 			print(Value)
 			while CombatSettings.active  do
-				
+
 				local parms = OverlapParams.new()
-				
-				
+
+
 				if CombatSettings.playerTarget then
 					local targets = {}
 					for _, v in pairs(workspace["Mobs"]:GetChildren()) do
 						table.insert(targets, v)
 					end
-					
+
 					for _, v in pairs(workspace["Characters"]:GetChildren()) do
 						if v.Name ~= Character.Name then
 							table.insert(targets,v)
 						end
 					end
 					parms.FilterDescendantsInstances = targets
-					
+
 				else
 					parms.FilterDescendantsInstances = workspace["Mobs"]:GetChildren()
 				end
 
 				parms.FilterType = Enum.RaycastFilterType.Include
-				
+
 				local mobsInRange = workspace:GetPartBoundsInRadius(Humrp.Position, CombatSettings.range, parms)
-				
+
 				local MobsToHit = {}
-				
+
 				--Loops Through And Gets Mob To Hit
 				for _, v in pairs(mobsInRange) do
 					local Mob = v.Parent
@@ -439,17 +444,53 @@ do
 						table.insert(MobsToHit, Mob)
 					end
 				end
-				
+
 				game:GetService("ReplicatedStorage").Systems.Combat.PlayerAttack:FireServer(MobsToHit)
-				
-				
+
+
 				wait(CombatSettings.waitTime)
 			end
 		end
 	})
-	
-	
-	local playerToggle = Tabs.Combat:AddToggle("MyToggle", {
+
+
+	-- PVP
+
+	local playerDropdown = Tabs.PVP:AddDropdown("Dropdown", {
+		Title = "Player List",
+		Description = "Select Players For Kill Aura To Target",
+		Default = "--",
+		Values = {1,2,23},
+		Multi = true,
+		Callback = function(Value)
+
+		end,
+	})
+
+	local speedSlider = Tabs.PVP:AddSlider("Slider", {
+		Title = "Kill Aura Speed",
+		Description = "Time between player Attacks",
+		Default = 0.5,
+		Min = 0.35,
+		Max = 1,
+		Rounding = 2,
+		Callback = function(Value)
+			--
+		end
+	})
+
+	local rangeSlider = Tabs.PVP:AddSlider("Slider", {
+		Title = "Kill Aura Range",
+		Description = "Set How Far Kill Aura Reaches",
+		Default = 20,
+		Min = 10,
+		Max = 50,
+		Rounding = 1,
+		Callback = function(Value)
+			--
+		end
+	})
+	local playerToggle = Tabs.PVP:AddToggle("MyToggle", {
 		Title = "Target Players",
 		Description = "Kill Aura Effects Players",
 		Default = false ,
@@ -457,7 +498,17 @@ do
 			CombatSettings.playerTarget = Value
 		end
 	})
-	
+	local refreshButton = Tabs.PVP:AddButton({
+		Title = "Test",
+		Description = "asdasd",
+		Callback = function()
+
+		end,
+	})
+
+
+
+
 	-- Teleport Tab
 	local ArenaDropdown = Tabs.Teleports:AddDropdown("Dropdown", {
 		Title = "Boss Arenas",
@@ -473,22 +524,38 @@ do
 		Multi = false,
 		Default = "--"
 	})
-	
+
 	ArenaDropdown:OnChanged(function(Value)
 		if Value == "--" then return end
 		local BossArenaFolder = workspace["BossArenas"][Value]
 		local Position = BossArenaFolder["Spawn"].Position
 		Character:MoveTo(Position)
 	end)
-	
+
 	FloorDropdown:OnChanged(function(Value)
 		if Value == "--" then return end
 		game:GetService("TeleportService"):Teleport(Floors[Value])
 	end)
 	
+	local upgradeButton = Tabs.Teleports:AddButton({
+		Title = "Upgrade",
+		Description = "asdasd",
+		Callback = function()
+
+		end,
+	})
+	
+	local enchantButton = Tabs.Teleports:AddButton({
+		Title = "Enchant",
+		Description = "asdasd",
+		Callback = function()
+
+		end,
+	})
+
 	-- Settings Tab
 	InterfaceManager:SetLibrary(Fluent)
 	InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-	
+
 
 end
