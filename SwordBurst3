@@ -1,4 +1,5 @@
-local VersionNumber = 1.3
+local VersionNumber = 1.4
+-- New
 
 local MobsList = {
 	[14819490378] = {
