@@ -1,4 +1,4 @@
-local VersionNumber = 1.4.1
+local VersionNumber = "1.4.1"
 
 local MobsList = {
 	[14819490378] = {
