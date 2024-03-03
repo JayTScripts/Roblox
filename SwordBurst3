@@ -1,3 +1,5 @@
+local VersionNumber = 1.3
+
 local MobsList = {
 	[14819490378] = {
 		"Razor Boar",
@@ -213,7 +215,7 @@ local PVPSettings = {
 
 
 local Window = Fluent:CreateWindow({
-	Title = "Jason HUB v1.2",
+	Title = "Jason HUB v"..VersionNumber,
 	SubTitle = "| SwordBurst 3",
 	TabWidth = 160,
 	Size = UDim2.fromOffset(580, 460),
@@ -385,7 +387,7 @@ do
 		Title = "Kill Aura Speed",
 		Description = "Time between player Attacks",
 		Default = 0.35,
-		Min = 0.25,
+		Min = 0.3,
 		Max = 1,
 		Rounding = 2,
 		Callback = function(Value)
@@ -483,7 +485,7 @@ do
 		Title = "Kill Aura Speed",
 		Description = "Time between swings",
 		Default = 0.35,
-		Min = 0.25,
+		Min = 0.3,
 		Max = 1,
 		Rounding = 2,
 		Callback = function(Value)
