@@ -213,7 +213,7 @@ local PVPSettings = {
 
 
 local Window = Fluent:CreateWindow({
-	Title = "Jason HUB v1.3",
+	Title = "Jason HUB v1.2",
 	SubTitle = "| SwordBurst 3",
 	TabWidth = 160,
 	Size = UDim2.fromOffset(580, 460),
@@ -433,7 +433,7 @@ do
 						local MobRP = Mob.HumanoidRootPart
 						if not MobRP then continue end -- Continues if MobRP doesn't exist
 						MobRP.Size = Vector3.new(CombatSettings.range*2,CombatSettings.range*2,CombatSettings.range*2)
-						MobRP.HumanoidRootPart.CanCollide = false
+						MobRP.CanCollide = false
 						table.insert(MobsToHit, Mob)
 					end
 				end
