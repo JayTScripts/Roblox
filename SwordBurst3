@@ -1,4 +1,4 @@
-local VersionNumber = "1.4.1"
+local VersionNumber = "1.4.3"
 
 local MobsList = {
 	[14819490378] = {
@@ -197,7 +197,8 @@ local PVPSettings = {
 	range = 0,
 	active = false,
 	targetAll = false,
-	targets = {}
+	targets = {},
+	autofarm = false
 }
 
 
@@ -468,16 +469,10 @@ do
 
 	playerDropdown:OnChanged(function(Value)
 		local Values = {}
-		local targets = {}
 		for Value, State in next, Value do
 			table.insert(Values, Value)
 		end
-		
-		for _, v in pairs(Values) do
-			if v == 1 then continue end
-			table.insert(targets, workspace.Characters[v])
-		end
-		PVPSettings.targets = targets
+		PVPSettings.targets = Values
 	end)
 
 	local speedSlider = Tabs.PVP:AddSlider("Slider", {
@@ -510,13 +505,11 @@ do
 		Callback = function(Value)
 			PVPSettings.active = Value
 			
-			print(PVPSettings.targets)
-			
 			while PVPSettings.active  do
 
 				local parms = OverlapParams.new()
 
-				parms.FilterDescendantsInstances = PVPSettings.targets
+				parms.FilterDescendantsInstances = workspace.Characters:GetChildren()
 				parms.FilterType = Enum.RaycastFilterType.Include
 
 				if not Humrp then continue end -- Continues if no Humrp
@@ -527,7 +520,7 @@ do
 				--Loops Through And Gets Mob To Hit
 				for _, v in pairs(playersInRange) do
 					local target = v.Parent
-					if target:IsA("Model") then
+					if target:IsA("Model") and table.find(PVPSettings.targets, target.Name) then
 						local PlayerRP = target.HumanoidRootPart
 						if not PlayerRP then continue end -- Continues if MobRP doesn't exist
 						PlayerRP.Size = Vector3.new(PVPSettings.range*2, PVPSettings.range*2,PVPSettings.range*2)
@@ -540,6 +533,47 @@ do
 
 
 				wait(PVPSettings.waitTime)
+			end
+		end
+	})
+	local playerToggle = Tabs.PVP:AddToggle("MyToggle", {
+		Title = "Auto Selected Players",
+		Description = "Enabled/Disabled to Farm Selected Player",
+		Default = false ,
+		Callback = function(Value)
+			PVPSettings.autofarm = Value
+			while PVPSettings.autofarm do
+
+				for _, v in pairs(workspace.Characters:GetChildren()) do
+					if table.find(PVPSettings.targets, v.Name) and PVPSettings.autofarm then
+						local playerHumrp = v.PrimaryPart
+						if not playerHumrp then continue end -- Skips If Mob Is Dead
+						local playerCFrame = playerHumrp.CFrame
+						local offset = CFrame.new(0,5,0)
+						local weld = Instance.new("WeldConstraint", playerHumrp)
+
+
+
+						local Tween = TS:Create(Humrp, TweenInfo.new(1), {CFrame = playerCFrame * offset})
+						Tween:Play()
+						Tween.Completed:Connect(function()
+							weld.Part0 = playerHumrp
+							weld.Part1 = Humrp
+						end)
+
+						local Timer = 0
+
+						repeat 
+							task.wait(0.5) 
+							Timer += 0.5
+						until v.Parent == nil or not PVPSettings.autofarm or Timer > 5 -- Possible Bug Here
+
+						if weld then weld:Destroy() end -- Destroys weld if player turned off autofarm before killing mob
+					end
+
+				end
+				wait(1)
+
 			end
 		end
 	})
