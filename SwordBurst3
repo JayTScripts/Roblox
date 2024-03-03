@@ -174,7 +174,8 @@ local PlaceID = game.PlaceId
 local CombatSettings = {
 	waitTime = 0,
 	range = 0,
-	active = false
+	active = false,
+	playerTarget = false
 }
 
 local AutoFarmConfig = {
@@ -404,7 +405,25 @@ do
 			while CombatSettings.active  do
 				
 				local parms = OverlapParams.new()
-				parms.FilterDescendantsInstances = workspace["Mobs"]:GetChildren()
+				
+				
+				if CombatSettings.playerTarget then
+					local targets = {}
+					for _, v in pairs(workspace["Mobs"]:GetChildren()) do
+						table.insert(targets, v)
+					end
+					
+					for _, v in pairs(workspace["Characters"]:GetChildren()) do
+						if v.Name ~= Character.Name then
+							table.insert(targets,v)
+						end
+					end
+					parms.FilterDescendantsInstances = targets
+					
+				else
+					parms.FilterDescendantsInstances = workspace["Mobs"]:GetChildren()
+				end
+
 				parms.FilterType = Enum.RaycastFilterType.Include
 				
 				local mobsInRange = workspace:GetPartBoundsInRadius(Humrp.Position, CombatSettings.range, parms)
@@ -416,6 +435,7 @@ do
 					local Mob = v.Parent
 					if Mob:IsA("Model") then
 						Mob.HumanoidRootPart.Size = Vector3.new(CombatSettings.range*2,CombatSettings.range*2,CombatSettings.range*2)
+						Mob.HumanoidRootPart.CanCollide = false
 						table.insert(MobsToHit, Mob)
 					end
 				end
@@ -425,6 +445,16 @@ do
 				
 				wait(CombatSettings.waitTime)
 			end
+		end
+	})
+	
+	
+	local playerToggle = Tabs.Combat:AddToggle("MyToggle", {
+		Title = "Target Players",
+		Description = "Kill Aura Effects Players",
+		Default = false ,
+		Callback = function(Value)
+			CombatSettings.playerTarget = Value
 		end
 	})
 	
