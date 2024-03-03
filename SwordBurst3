@@ -189,7 +189,6 @@ local AutoFarmOptions = {
 	quest = nil,
 	mobToggleOn = nil,
 	questToggleOn = nil,
-	oreToggleOn = nil,
 	dropsToggleOn = nil
 }
 
@@ -197,7 +196,8 @@ local PVPSettings = {
 	waitTime = 0,
 	range = 0,
 	active = false,
-	targetAll = false
+	targetAll = false,
+	targets = {}
 }
 
 
@@ -282,9 +282,9 @@ do
 						print(Humrp.CFrame)
 
 						if AutoFarmConfig.direction == "Below" then
-							offset = CFrame.new(0,(AutoFarmConfig.distance + 7)* -1 ,0)
+							offset = CFrame.new(0,(AutoFarmConfig.distance + 13)* -1 ,0)
 						elseif AutoFarmConfig.direction == "Above"  then
-							offset = CFrame.new(0,AutoFarmConfig.distance + 7,0)
+							offset = CFrame.new(0,AutoFarmConfig.distance + 13,0)
 						elseif AutoFarmConfig.direction == "Behind" then
 							offset = CFrame.new(0,0,AutoFarmConfig.distance)
 						end
@@ -328,15 +328,6 @@ do
 		end
 	})
 
-	local OreToggle = Tabs.Autofarm:AddToggle("MyToggle", {
-		Title = "Auto Farm Ores",
-		Description = "Teleport to Ores (Turn on to Auto Collect) NOT IMPLEMENTED YET",
-		Default = false ,
-		Callback = function(Value)
-			print("Toggle was changed:", Value)
-		end
-	})
-
 	local DropsToggle = Tabs.Autofarm:AddToggle("MyToggle", {
 		Title = "Auto Collect Drops",
 		Description = "Collect all drops from mobs",
@@ -373,9 +364,9 @@ do
 	local DistanceSlider = Tabs.AutofarmConfig:AddSlider("Slider", {
 		Title = "Farm Distance",
 		Description = "Adjust the distance to a mob",
-		Default = 6,
+		Default = 10,
 		Min = 6,
-		Max = 10,
+		Max = 15,
 		Rounding = 1,
 		Callback = function(Value)
 			AutoFarmConfig.distance = Value
@@ -461,7 +452,7 @@ do
 	
 	
 	local function UpdatePlayerDropdown()
-		local targets = {"All"}
+		local targets = {}
 		for _, v in pairs(workspace.Characters:GetChildren()) do
 			if v.Name == Character.Name then continue end
 			table.insert(targets, v.Name)
@@ -476,9 +467,16 @@ do
 
 	playerDropdown:OnChanged(function(Value)
 		local Values = {}
+		local targets = {}
 		for Value, State in next, Value do
 			table.insert(Values, Value)
 		end
+		
+		for _, v in pairs(Values) do
+			if v == 1 then continue end
+			table.insert(targets, workspace.Characters[v])
+		end
+		PVPSettings.targets = targets
 	end)
 
 	local speedSlider = Tabs.PVP:AddSlider("Slider", {
@@ -510,6 +508,38 @@ do
 		Default = false ,
 		Callback = function(Value)
 			PVPSettings.active = Value
+			
+			print(PVPSettings.targets)
+			
+			while PVPSettings.active  do
+
+				local parms = OverlapParams.new()
+
+				parms.FilterDescendantsInstances = PVPSettings.targets
+				parms.FilterType = Enum.RaycastFilterType.Include
+
+				if not Humrp then continue end -- Continues if no Humrp
+				local playersInRange = workspace:GetPartBoundsInRadius(Humrp.Position, PVPSettings.range, parms)
+
+				local playersToHit = {}
+
+				--Loops Through And Gets Mob To Hit
+				for _, v in pairs(playersInRange) do
+					local target = v.Parent
+					if target:IsA("Model") then
+						local PlayerRP = target.HumanoidRootPart
+						if not PlayerRP then continue end -- Continues if MobRP doesn't exist
+						PlayerRP.Size = Vector3.new(PVPSettings.range*2, PVPSettings.range*2,PVPSettings.range*2)
+						PlayerRP.CanCollide = false
+						table.insert(playersToHit, target)
+					end
+				end
+
+				game:GetService("ReplicatedStorage").Systems.Combat.PlayerAttack:FireServer(playersToHit)
+
+
+				wait(PVPSettings.waitTime)
+			end
 		end
 	})
 	local refreshButton = Tabs.PVP:AddButton({
@@ -538,7 +568,31 @@ do
 		Multi = false,
 		Default = "--"
 	})
+	
+	local playerTPDropdown = Tabs.Teleports:AddDropdown("Dropdown", {
+		Title = "Teleport To Player",
+		Description = "Chose Player to Teleport To",
+		Values = {"New Arcadia", "Floor 1", "Floor 2", "Floor 3"},
+		Multi = false,
+		Default = "--"
+	})
+	
+	
+	local function UpdatePlayerTP()
+		local targets = {}
+		for _, v in pairs(workspace.Characters:GetChildren()) do
+			if v.Name == Character.Name then continue end
+			table.insert(targets, v.Name)
+		end
+		playerTPDropdown:SetValues({})
+		playerTPDropdown:SetValues(targets)
 
+	end
+	
+	UpdatePlayerTP()
+	
+	
+	
 	ArenaDropdown:OnChanged(function(Value)
 		if Value == "--" then return end
 		local BossArenaFolder = workspace["BossArenas"][Value]
@@ -551,21 +605,15 @@ do
 		game:GetService("TeleportService"):Teleport(Floors[Value])
 	end)
 	
-	local upgradeButton = Tabs.Teleports:AddButton({
-		Title = "Upgrade",
-		Description = "asdasd",
-		Callback = function()
-
-		end,
-	})
+	playerTPDropdown:OnChanged(function(Value)
+		if Value == "--" then return end
+		
+		local player = workspace["Characters"][Value]
+		local CharRP = player.PrimaryPart
+		local Position = CharRP.Position
+		Character:MoveTo(Position)
+	end)
 	
-	local enchantButton = Tabs.Teleports:AddButton({
-		Title = "Enchant",
-		Description = "asdasd",
-		Callback = function()
-
-		end,
-	})
 
 	-- Settings Tab
 	InterfaceManager:SetLibrary(Fluent)
