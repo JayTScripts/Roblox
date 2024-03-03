@@ -272,9 +272,9 @@ do
 						print(Humrp.CFrame)
 						
 						if AutoFarmConfig.direction == "Below" then
-							offset = CFrame.new(0,(AutoFarmConfig.distance + 4)* -1 ,0)
+							offset = CFrame.new(0,(AutoFarmConfig.distance + 7)* -1 ,0)
 						elseif AutoFarmConfig.direction == "Above"  then
-							offset = CFrame.new(0,AutoFarmConfig.distance + 4,0)
+							offset = CFrame.new(0,AutoFarmConfig.distance + 7,0)
 						elseif AutoFarmConfig.direction == "Behind" then
 							offset = CFrame.new(0,0,AutoFarmConfig.distance)
 						end
