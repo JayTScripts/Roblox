@@ -1,5 +1,4 @@
-local VersionNumber = 1.4
--- New
+local VersionNumber = 1.4.1
 
 local MobsList = {
 	[14819490378] = {
@@ -608,12 +607,19 @@ do
 	
 	playerTPDropdown:OnChanged(function(Value)
 		if Value == "--" then return end
-		
 		local player = workspace["Characters"][Value]
 		local CharRP = player.PrimaryPart
 		local Position = CharRP.Position
 		Character:MoveTo(Position)
 	end)
+	
+	local refreshTPButton = Tabs.Teleports:AddButton({
+		Title = "Refresh",
+		Description = "Refreshes Player List",
+		Callback = function()
+			UpdatePlayerTP()
+		end,
+	})
 	
 
 	-- Settings Tab
