@@ -195,7 +195,7 @@ local PVPSettings = {
 	waitTime = 0,
 	range = 0,
 	active = false,
-	
+	targetAll = false
 }
 
 
@@ -213,7 +213,7 @@ local PVPSettings = {
 
 
 local Window = Fluent:CreateWindow({
-	Title = "Jason HUB v1.2",
+	Title = "Jason HUB v1.3",
 	SubTitle = "| SwordBurst 3",
 	TabWidth = 160,
 	Size = UDim2.fromOffset(580, 460),
@@ -228,7 +228,7 @@ local Window = Fluent:CreateWindow({
 local Tabs = {
 	Autofarm = Window:AddTab({ Title = "Autofarm", Icon = "repeat" }),
 	AutofarmConfig = Window:AddTab({ Title = "Autofarm Config", Icon = "repeat" }),
-	Combat = Window:AddTab({ Title = "Combat (Mobs)", Icon = "dog" }),
+	Combat = Window:AddTab({ Title = "Combat (Mobs)", Icon = "ghost" }),
 	PVP = Window:AddTab({ Title = "Combat (PVP) WIP", Icon = "swords" }),
 	Teleports = Window:AddTab({ Title = "Teleports", Icon = "map-pin" }),
 	Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
@@ -406,7 +406,7 @@ do
 	})
 
 	local AuraToggle = Tabs.Combat:AddToggle("MyToggle", {
-		Title = "Kill Aura",
+		Title = "Kill Aura (MOBS)",
 		Description = "Targets All Mobs In Range",
 		Default = false ,
 		Callback = function(Value)
@@ -420,7 +420,8 @@ do
 				parms.FilterDescendantsInstances = workspace["Mobs"]:GetChildren()
 
 				parms.FilterType = Enum.RaycastFilterType.Include
-
+				
+				if not Humrp then continue end -- Continues if no Humrp
 				local mobsInRange = workspace:GetPartBoundsInRadius(Humrp.Position, CombatSettings.range, parms)
 
 				local MobsToHit = {}
@@ -448,16 +449,35 @@ do
 
 	-- PVP
 
-	local playerDropdown = Tabs.PVP:AddDropdown("Dropdown", {
+	local playerDropdown = Tabs.PVP:AddDropdown("MultiDropdown", {
 		Title = "Player List",
-		Description = "Select Players For Kill Aura To Target",
-		Default = "--",
-		Values = {1,2,23},
+		Description = "Select Players For Kill Aura to Target",
+		Values = {"ERROR"},
 		Multi = true,
-		Callback = function(Value)
-
-		end,
+		Default = {"--"},
 	})
+	
+	
+	local function UpdatePlayerDropdown()
+		local targets = {"All"}
+		for _, v in pairs(workspace.Characters:GetChildren()) do
+			if v.Name == Character.Name then continue end
+			table.insert(targets, v.Name)
+		end
+		playerDropdown:SetValues({})
+		playerDropdown:SetValues(targets)
+		
+	end
+	
+	
+	UpdatePlayerDropdown()
+
+	playerDropdown:OnChanged(function(Value)
+		local Values = {}
+		for Value, State in next, Value do
+			table.insert(Values, Value)
+		end
+	end)
 
 	local speedSlider = Tabs.PVP:AddSlider("Slider", {
 		Title = "Kill Aura Speed",
@@ -494,7 +514,7 @@ do
 		Title = "Refresh",
 		Description = "Refreshes Player List",
 		Callback = function()
-
+			UpdatePlayerDropdown()
 		end,
 	})
 
