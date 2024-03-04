@@ -1,4 +1,4 @@
-local VersionNumber = "1.4.4"
+local VersionNumber = "1.5"
 
 local MobsList = {
 	[14819490378] = {
@@ -239,6 +239,7 @@ local Tabs = {
 	PVP = Window:AddTab({ Title = "Combat (PVP) WIP", Icon = "swords" }),
 	Teleports = Window:AddTab({ Title = "Teleports", Icon = "map-pin" }),
 	PlayerStats = Window:AddTab({ Title = "Stats", Icon = "trending-up" }),
+	Misc = Window:AddTab({ Title = "Misc", Icon = "mail" }),
 	Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
 }
 
@@ -677,7 +678,79 @@ do
 			})
 		end
 	})
+	
+	-- MISC
+	
+	local invSpyDropdown = Tabs.Misc:AddDropdown("Dropdown", {
+		Title = "Select Player",
+		Description = "Spy on Player's Inventory",
+		Values = {"New Arcadia", "Floor 1", "Floor 2", "Floor 3"},
+		Multi = false,
+		Default = "--"
+	})
 
+
+	local function UpdatePlayerSpy()
+		local targets = {}
+		for _, v in pairs(workspace.Characters:GetChildren()) do
+			if v.Name == Character.Name then continue end
+			table.insert(targets, v.Name)
+		end
+		invSpyDropdown:SetValues({})
+		invSpyDropdown:SetValues(targets)
+
+	end
+
+	UpdatePlayerSpy()
+	
+	local refreshSpyButton = Tabs.Misc:AddButton({
+		Title = "Refresh",
+		Description = "Refreshes Player List",
+		Callback = function()
+			UpdatePlayerTP()
+		end,
+	})
+	
+	
+	local paragraph = Tabs.Misc:AddParagraph({
+		Title = "Player Info"
+	})
+
+	
+	invSpyDropdown:OnChanged(function(Value)
+		if Value == "--" then return end
+		local playerInv = game.ReplicatedStorage["Profiles"][Value]
+		if not playerInv then
+			paragraph:Destroy()
+			paragraph = Tabs.Misc:AddParagraph({
+				Title = "Player Not Found"
+			})
+		end
+		local inventoryPlayer = playerInv:FindFirstChild("Inventory")
+		local vel = playerInv:FindFirstChild("Vel").Value
+		local inventory = {}
+		for _, v in pairs(inventoryPlayer:GetChildren()) do
+			if v:FindFirstChild("Count") then
+				inventory[v.Name] = v.Count.Value
+			elseif inventory[v.Name] then
+				inventory[v.Name] += 1
+			else
+				inventory[v.Name] = 1
+			end
+		end
+		
+		local dialogueMessage = "Player's Vel: "..vel.." vel\n-----------------------------------\n\nPlayer Inventory:\n-----------------------------------\n"
+		for key, value in pairs(inventory) do
+			 dialogueMessage = dialogueMessage..key..": x"..value.."\n"
+		end
+		
+		paragraph:Destroy()
+		paragraph = Tabs.Misc:AddParagraph({
+			Title = Value.."'s Inventory",
+			Content = dialogueMessage
+		})
+
+	end)
 	
 	
 	
