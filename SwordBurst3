@@ -1,4 +1,4 @@
-local VersionNumber = "1.5.1"
+local VersionNumber = "1.5.2"
 
 local MobsList = {
 	[14819490378] = {
@@ -726,6 +726,9 @@ do
 	local paragraph = Tabs.Misc:AddParagraph({
 		Title = "Player Info"
 	})
+	
+	local paragraphCont
+	local paragraphCont2
 
 
 	invSpyDropdown:OnChanged(function(Value)
@@ -741,6 +744,7 @@ do
 		local vel = playerInv:FindFirstChild("Vel").Value
 		local inventory = {}
 		for _, v in pairs(inventoryPlayer:GetChildren()) do
+			print(v.Name)
 			if v:FindFirstChild("Count") then
 				inventory[v.Name] = v.Count.Value
 			elseif inventory[v.Name] then
@@ -751,15 +755,46 @@ do
 		end
 
 		local dialogueMessage = "Player's Vel: "..vel.." vel\n-----------------------------------\n\nPlayer Inventory:\n-----------------------------------\n"
+		local msg1= ""
+		local msg2=""
+		local lineCount = 0;
 		for key, value in pairs(inventory) do
-			dialogueMessage = dialogueMessage..key..": x"..value.."\n"
+			lineCount += 1
+			if lineCount < 25 then
+				dialogueMessage = dialogueMessage..key..": x"..value.."\n"
+			elseif lineCount < 50 then
+				msg1 = msg1..key..": x"..value.."\n"
+			else
+				msg2 = msg2..key..": x"..value.."\n"
+			end
+			
 		end
-
+		
+		
 		paragraph:Destroy()
+		if paragraphCont then paragraphCont:Destroy() end
+		if paragraphCont2 then paragraphCont2:Destroy() end
+		
 		paragraph = Tabs.Misc:AddParagraph({
 			Title = Value.."'s Inventory",
 			Content = dialogueMessage
 		})
+		
+		if lineCount > 24 then
+			
+			paragraphCont = Tabs.Misc:AddParagraph({
+				Title = "Inventory Continued Part 2",
+				Content = msg1
+			})
+		end
+		
+		if lineCount > 49 then	
+			paragraphCont2 = Tabs.Misc:AddParagraph({
+				Title = "Inventory Continued Part 3",
+				Content = msg2
+			})
+
+		end
 
 	end)
 
