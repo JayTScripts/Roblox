@@ -1,4 +1,4 @@
-local VersionNumber = "1.5"
+local VersionNumber = "1.5.1"
 
 local MobsList = {
 	[14819490378] = {
@@ -231,7 +231,6 @@ local Window = Fluent:CreateWindow({
 
 
 
---Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
 local Tabs = {
 	Autofarm = Window:AddTab({ Title = "Autofarm", Icon = "repeat" }),
 	AutofarmConfig = Window:AddTab({ Title = "Autofarm Config", Icon = "repeat" }),
@@ -242,362 +241,383 @@ local Tabs = {
 	Misc = Window:AddTab({ Title = "Misc", Icon = "mail" }),
 	Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
 }
+--Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
+
+Window:SelectTab(1) -- Picks Autofarm as Starting Tab
+
+
+if game.PlaceId ~= Floors["New Arcadia"] then
+	do 
+		-- Autofarm Tab
+		local MobDropdown = Tabs.Autofarm:AddDropdown("Dropdown", {
+			Title = "Select Mob",
+			Description = "Select Mob to Farm",
+			Values = MobsList[game.PlaceId],
+			Multi = false,
+			Default = "--",
+			Callback = function(Value)
+				AutoFarmOptions.mob = Value
+			end
+		})
+
+		local QuestDropdown = Tabs.Autofarm:AddDropdown("Dropdown", {
+			Title = "Select Quest",
+			Description = "Select Quest to AutoQuest",
+			Values = Quests[game.PlaceId],
+			Multi = false,
+			Default = "--",
+			Callback = function(Value)
+				AutoFarmOptions.quest = QuestEquivalency[Value]
+			end
+		})
+
+		local MobToggle = Tabs.Autofarm:AddToggle("MyToggle", {
+			Title = "Auto Selected Mob",
+			Description = "Enabled/Disabled to Farm Selected Mob",
+			Default = false ,
+			Callback = function(Value)
+				AutoFarmOptions.mobToggleOn = Value
+				while AutoFarmOptions.mobToggleOn do
+
+					for _, v in pairs(workspace.Mobs:GetChildren()) do
+						if (v.Name == AutoFarmOptions.mob or v.Name == "Giant "..AutoFarmOptions.mob) and AutoFarmOptions.mobToggleOn then
+							local mobHumrp = v.PrimaryPart
+							if not mobHumrp then continue end -- Skips If Mob Is Dead
+							local mobCFrame = mobHumrp.CFrame
+							local offset = CFrame.new(0,0,0)
+							local weld = Instance.new("WeldConstraint", mobHumrp)
+
+							if AutoFarmConfig.direction == "Below" then
+								offset = CFrame.new(0,(AutoFarmConfig.distance + 13)* -1 ,0)
+							elseif AutoFarmConfig.direction == "Above"  then
+								offset = CFrame.new(0,AutoFarmConfig.distance + 13,0)
+							elseif AutoFarmConfig.direction == "Behind" then
+								offset = CFrame.new(0,0,AutoFarmConfig.distance)
+							end
+
+							local Tween = TS:Create(Humrp, TweenInfo.new(1), {CFrame = mobCFrame * offset})
+							Tween:Play()
+							Tween.Completed:Connect(function()
+								weld.Part0 = mobHumrp
+								weld.Part1 = Humrp
+							end)
+
+							local Timer = 0
+
+							repeat 
+								task.wait(0.5) 
+								Timer += 0.5
+							until v.Parent == nil or not AutoFarmOptions.mobToggleOn or Timer > 15 -- Possible Bug Here
+
+
+							if weld then weld:Destroy() end -- Destroys weld if player turned off autofarm before killing mob
+						end
+
+					end
+					wait(1)
+
+				end
+			end
+		})
+
+		local QuestToggle = Tabs.Autofarm:AddToggle("MyToggle", {
+			Title = "Auto Selected Quest",
+			Description = "Enabled/Disabled to Farm Selected Quest",
+			Default = false ,
+			Callback = function(Value)
+				AutoFarmOptions.questToggleOn = Value
+				while AutoFarmOptions.questToggleOn do
+					game:GetService("ReplicatedStorage").Systems.Quests.CompleteQuest:FireServer(AutoFarmOptions.quest)
+					wait(1)
+					game:GetService("ReplicatedStorage").Systems.Quests.AcceptQuest:FireServer(AutoFarmOptions.quest)
+					wait(3.5)
+				end
+			end
+		})
+
+		local DropsToggle = Tabs.Autofarm:AddToggle("MyToggle", {
+			Title = "Auto Collect Drops",
+			Description = "Collect all drops from mobs",
+			Default = false ,
+			Callback = function(Value)
+				AutoFarmOptions.dropsToggleOn = Value
+
+				while AutoFarmOptions.dropsToggleOn  do
+
+					for _, v in pairs(game.ReplicatedStorage.Drops:GetChildren()) do
+						if v:IsA("Folder")  then
+							game:GetService("ReplicatedStorage").Systems.Drops.Pickup:FireServer(v)
+						end
+					end
+					wait(2)
+				end
+			end
+		})
+
+
+		-- Auto Farm Config Tab
+		local PositionDropdown = Tabs.AutofarmConfig:AddDropdown("Dropdown", {
+			Title = "Farm Position",
+			Description = "Select Farm Position",
+			Values = {"Below", "Above", "Behind"},
+			Multi = false,
+			Default = 1,
+			Callback = function(Value)
+				AutoFarmConfig.direction = Value
+			end
+		})
+
+		local DistanceSlider = Tabs.AutofarmConfig:AddSlider("Slider", {
+			Title = "Farm Distance",
+			Description = "Adjust the distance to a mob",
+			Default = 10,
+			Min = 6,
+			Max = 15,
+			Rounding = 1,
+			Callback = function(Value)
+				AutoFarmConfig.distance = Value
+			end
+		})
+
+		-- Combat Tab
+		local TimerSlider = Tabs.Combat:AddSlider("Slider", {
+			Title = "Kill Aura Speed",
+			Description = "Time between player Attacks",
+			Default = 0.35,
+			Min = 0.3,
+			Max = 1,
+			Rounding = 2,
+			Callback = function(Value)
+				CombatSettings.waitTime = Value
+			end
+		})
+
+		local DistanceSlider = Tabs.Combat:AddSlider("Slider", {
+			Title = "Kill Aura Range",
+			Description = "Set How Far Kill Aura Reaches",
+			Default = 50,
+			Min = 10,
+			Max = 50,
+			Rounding = 1,
+			Callback = function(Value)
+				CombatSettings.range = Value
+			end
+		})
+
+		local AuraToggle = Tabs.Combat:AddToggle("MyToggle", {
+			Title = "Kill Aura (MOBS)",
+			Description = "Targets All Mobs In Range",
+			Default = false ,
+			Callback = function(Value)
+				CombatSettings.active = Value
+				Humrp.CanCollide = not Value
+				while CombatSettings.active  do
+
+					local parms = OverlapParams.new()
+
+					parms.FilterDescendantsInstances = workspace["Mobs"]:GetChildren()
+
+					parms.FilterType = Enum.RaycastFilterType.Include
+
+					if not Humrp then continue end -- Continues if no Humrp
+					local mobsInRange = workspace:GetPartBoundsInRadius(Humrp.Position, CombatSettings.range, parms)
+
+					local MobsToHit = {}
+
+					--Loops Through And Gets Mob To Hit
+					for _, v in pairs(mobsInRange) do
+						local Mob = v.Parent
+						if Mob:IsA("Model") then
+							local MobRP = Mob.HumanoidRootPart
+							if not MobRP then continue end -- Continues if MobRP doesn't exist
+							MobRP.Size = Vector3.new(CombatSettings.range*2,CombatSettings.range*2,CombatSettings.range*2)
+							MobRP.CanCollide = false
+							table.insert(MobsToHit, Mob)
+						end
+					end
+
+					game:GetService("ReplicatedStorage").Systems.Combat.PlayerAttack:FireServer(MobsToHit)
+
+
+					wait(CombatSettings.waitTime)
+				end
+			end
+		})
+
+
+		-- PVP
+
+		local playerDropdown = Tabs.PVP:AddDropdown("MultiDropdown", {
+			Title = "Player List",
+			Description = "Select Players For Kill Aura to Target",
+			Values = {"ERROR"},
+			Multi = true,
+			Default = {"--"},
+		})
+
+
+		local function UpdatePlayerDropdown()
+			local targets = {}
+			for _, v in pairs(workspace.Characters:GetChildren()) do
+				if v.Name == Character.Name then continue end
+				table.insert(targets, v.Name)
+			end
+			playerDropdown:SetValues({})
+			playerDropdown:SetValues(targets)
+
+		end
+
+
+		UpdatePlayerDropdown()
+
+		playerDropdown:OnChanged(function(Value)
+			local Values = {}
+			for Value, State in next, Value do
+				table.insert(Values, Value)
+			end
+			PVPSettings.targets = Values
+		end)
+
+		local speedSlider = Tabs.PVP:AddSlider("Slider", {
+			Title = "Kill Aura Speed",
+			Description = "Time between swings",
+			Default = 0.35,
+			Min = 0.3,
+			Max = 1,
+			Rounding = 2,
+			Callback = function(Value)
+				PVPSettings.waitTime = Value
+			end
+		})
+
+		local rangeSlider = Tabs.PVP:AddSlider("Slider", {
+			Title = "Kill Aura Range",
+			Description = "Set How Far Kill Aura Reaches",
+			Default = 20,
+			Min = 10,
+			Max = 200,
+			Rounding = 1,
+			Callback = function(Value)
+				PVPSettings.range = Value
+			end
+		})
+		local playerToggle = Tabs.PVP:AddToggle("MyToggle", {
+			Title = "Target Players",
+			Description = "Kill Aura Effects Players",
+			Default = false ,
+			Callback = function(Value)
+				PVPSettings.active = Value
+
+				while PVPSettings.active  do
+
+					local parms = OverlapParams.new()
+
+					parms.FilterDescendantsInstances = workspace.Characters:GetChildren()
+					parms.FilterType = Enum.RaycastFilterType.Include
+
+					if not Humrp then continue end -- Continues if no Humrp
+					local playersInRange = workspace:GetPartBoundsInRadius(Humrp.Position, PVPSettings.range, parms)
+
+					local playersToHit = {}
+
+					--Loops Through And Gets Mob To Hit
+					for _, v in pairs(playersInRange) do
+						local target = v.Parent
+						if target:IsA("Model") and table.find(PVPSettings.targets, target.Name) then
+							local PlayerRP = target.HumanoidRootPart
+							if not PlayerRP then continue end -- Continues if MobRP doesn't exist
+							PlayerRP.Size = Vector3.new(PVPSettings.range*2, PVPSettings.range*2,PVPSettings.range*2)
+							PlayerRP.CanCollide = false
+							table.insert(playersToHit, target)
+						end
+					end
+
+					game:GetService("ReplicatedStorage").Systems.Combat.PlayerAttack:FireServer(playersToHit)
+
+
+					wait(PVPSettings.waitTime)
+				end
+			end
+		})
+		local playerToggle = Tabs.PVP:AddToggle("MyToggle", {
+			Title = "Auto Selected Players",
+			Description = "Enabled/Disabled to Farm Selected Player",
+			Default = false ,
+			Callback = function(Value)
+				PVPSettings.autofarm = Value
+				while PVPSettings.autofarm do
+
+					for _, v in pairs(workspace.Characters:GetChildren()) do
+						if table.find(PVPSettings.targets, v.Name) and PVPSettings.autofarm then
+							local playerHumrp = v.PrimaryPart
+							if not playerHumrp then continue end -- Skips If Mob Is Dead
+							local playerCFrame = playerHumrp.CFrame
+							local offset = CFrame.new(0,5,0)
+							local weld = Instance.new("WeldConstraint", playerHumrp)
+
+
+
+							local Tween = TS:Create(Humrp, TweenInfo.new(1), {CFrame = playerCFrame * offset})
+							Tween:Play()
+							Tween.Completed:Connect(function()
+								weld.Part0 = playerHumrp
+								weld.Part1 = Humrp
+							end)
+
+							local Timer = 0
+
+							repeat 
+								task.wait(0.5) 
+								Timer += 0.5
+							until v.Parent == nil or not PVPSettings.autofarm or Timer > 5 -- Possible Bug Here
+
+							if weld then weld:Destroy() end -- Destroys weld if player turned off autofarm before killing mob
+						end
+
+					end
+					wait(1)
+
+				end
+			end
+		})
+		local refreshButton = Tabs.PVP:AddButton({
+			Title = "Refresh",
+			Description = "Refreshes Player List",
+			Callback = function()
+				UpdatePlayerDropdown()
+			end,
+		})
+
+
+
+
+		-- Teleport Tab
+		local ArenaDropdown = Tabs.Teleports:AddDropdown("Dropdown", {
+			Title = "Boss Arenas",
+			Description = "Chose Arena to Teleport To",
+			Values = Bosses[game.PlaceId],
+			Multi = false,
+			Default = "--"
+		})
+
+		ArenaDropdown:OnChanged(function(Value)
+			if Value == "--" then return end
+			local BossArenaFolder = workspace["BossArenas"][Value]
+			local Position = BossArenaFolder["Spawn"].Position
+			Character:MoveTo(Position)
+		end)
+	end
+else
+
+end
+
+--Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
 
 Window:SelectTab(1) -- Picks Autofarm as Starting Tab
 
 
 do
-	-- Autofarm Tab
-	local MobDropdown = Tabs.Autofarm:AddDropdown("Dropdown", {
-		Title = "Select Mob",
-		Description = "Select Mob to Farm",
-		Values = MobsList[game.PlaceId],
-		Multi = false,
-		Default = "--",
-		Callback = function(Value)
-			AutoFarmOptions.mob = Value
-		end
-	})
 
-	local QuestDropdown = Tabs.Autofarm:AddDropdown("Dropdown", {
-		Title = "Select Quest",
-		Description = "Select Quest to AutoQuest",
-		Values = Quests[game.PlaceId],
-		Multi = false,
-		Default = "--",
-		Callback = function(Value)
-			AutoFarmOptions.quest = QuestEquivalency[Value]
-		end
-	})
-
-	local MobToggle = Tabs.Autofarm:AddToggle("MyToggle", {
-		Title = "Auto Selected Mob",
-		Description = "Enabled/Disabled to Farm Selected Mob",
-		Default = false ,
-		Callback = function(Value)
-			AutoFarmOptions.mobToggleOn = Value
-			while AutoFarmOptions.mobToggleOn do
-
-				for _, v in pairs(workspace.Mobs:GetChildren()) do
-					if (v.Name == AutoFarmOptions.mob or v.Name == "Giant "..AutoFarmOptions.mob) and AutoFarmOptions.mobToggleOn then
-						local mobHumrp = v.PrimaryPart
-						if not mobHumrp then continue end -- Skips If Mob Is Dead
-						local mobCFrame = mobHumrp.CFrame
-						local offset = CFrame.new(0,0,0)
-						local weld = Instance.new("WeldConstraint", mobHumrp)
-
-						if AutoFarmConfig.direction == "Below" then
-							offset = CFrame.new(0,(AutoFarmConfig.distance + 13)* -1 ,0)
-						elseif AutoFarmConfig.direction == "Above"  then
-							offset = CFrame.new(0,AutoFarmConfig.distance + 13,0)
-						elseif AutoFarmConfig.direction == "Behind" then
-							offset = CFrame.new(0,0,AutoFarmConfig.distance)
-						end
-
-						local Tween = TS:Create(Humrp, TweenInfo.new(1), {CFrame = mobCFrame * offset})
-						Tween:Play()
-						Tween.Completed:Connect(function()
-							weld.Part0 = mobHumrp
-							weld.Part1 = Humrp
-						end)
-
-						local Timer = 0
-
-						repeat 
-							task.wait(0.5) 
-							Timer += 0.5
-						until v.Parent == nil or not AutoFarmOptions.mobToggleOn or Timer > 15 -- Possible Bug Here
-						
-						
-						if weld then weld:Destroy() end -- Destroys weld if player turned off autofarm before killing mob
-					end
-
-				end
-				wait(1)
-
-			end
-		end
-	})
-
-	local QuestToggle = Tabs.Autofarm:AddToggle("MyToggle", {
-		Title = "Auto Selected Quest",
-		Description = "Enabled/Disabled to Farm Selected Quest",
-		Default = false ,
-		Callback = function(Value)
-			AutoFarmOptions.questToggleOn = Value
-			while AutoFarmOptions.questToggleOn do
-				game:GetService("ReplicatedStorage").Systems.Quests.CompleteQuest:FireServer(AutoFarmOptions.quest)
-				wait(1)
-				game:GetService("ReplicatedStorage").Systems.Quests.AcceptQuest:FireServer(AutoFarmOptions.quest)
-				wait(3.5)
-			end
-		end
-	})
-
-	local DropsToggle = Tabs.Autofarm:AddToggle("MyToggle", {
-		Title = "Auto Collect Drops",
-		Description = "Collect all drops from mobs",
-		Default = false ,
-		Callback = function(Value)
-			AutoFarmOptions.dropsToggleOn = Value
-
-			while AutoFarmOptions.dropsToggleOn  do
-
-				for _, v in pairs(game.ReplicatedStorage.Drops:GetChildren()) do
-					if v:IsA("Folder")  then
-						game:GetService("ReplicatedStorage").Systems.Drops.Pickup:FireServer(v)
-					end
-				end
-				wait(2)
-			end
-		end
-	})
-
-
-	-- Auto Farm Config Tab
-	local PositionDropdown = Tabs.AutofarmConfig:AddDropdown("Dropdown", {
-		Title = "Farm Position",
-		Description = "Select Farm Position",
-		Values = {"Below", "Above", "Behind"},
-		Multi = false,
-		Default = 1,
-		Callback = function(Value)
-			AutoFarmConfig.direction = Value
-		end
-	})
-
-	local DistanceSlider = Tabs.AutofarmConfig:AddSlider("Slider", {
-		Title = "Farm Distance",
-		Description = "Adjust the distance to a mob",
-		Default = 10,
-		Min = 6,
-		Max = 15,
-		Rounding = 1,
-		Callback = function(Value)
-			AutoFarmConfig.distance = Value
-		end
-	})
-
-	-- Combat Tab
-	local TimerSlider = Tabs.Combat:AddSlider("Slider", {
-		Title = "Kill Aura Speed",
-		Description = "Time between player Attacks",
-		Default = 0.35,
-		Min = 0.3,
-		Max = 1,
-		Rounding = 2,
-		Callback = function(Value)
-			CombatSettings.waitTime = Value
-		end
-	})
-
-	local DistanceSlider = Tabs.Combat:AddSlider("Slider", {
-		Title = "Kill Aura Range",
-		Description = "Set How Far Kill Aura Reaches",
-		Default = 50,
-		Min = 10,
-		Max = 50,
-		Rounding = 1,
-		Callback = function(Value)
-			CombatSettings.range = Value
-		end
-	})
-
-	local AuraToggle = Tabs.Combat:AddToggle("MyToggle", {
-		Title = "Kill Aura (MOBS)",
-		Description = "Targets All Mobs In Range",
-		Default = false ,
-		Callback = function(Value)
-			CombatSettings.active = Value
-			Humrp.CanCollide = not Value
-			while CombatSettings.active  do
-
-				local parms = OverlapParams.new()
-
-				parms.FilterDescendantsInstances = workspace["Mobs"]:GetChildren()
-
-				parms.FilterType = Enum.RaycastFilterType.Include
-				
-				if not Humrp then continue end -- Continues if no Humrp
-				local mobsInRange = workspace:GetPartBoundsInRadius(Humrp.Position, CombatSettings.range, parms)
-
-				local MobsToHit = {}
-
-				--Loops Through And Gets Mob To Hit
-				for _, v in pairs(mobsInRange) do
-					local Mob = v.Parent
-					if Mob:IsA("Model") then
-						local MobRP = Mob.HumanoidRootPart
-						if not MobRP then continue end -- Continues if MobRP doesn't exist
-						MobRP.Size = Vector3.new(CombatSettings.range*2,CombatSettings.range*2,CombatSettings.range*2)
-						MobRP.CanCollide = false
-						table.insert(MobsToHit, Mob)
-					end
-				end
-
-				game:GetService("ReplicatedStorage").Systems.Combat.PlayerAttack:FireServer(MobsToHit)
-
-
-				wait(CombatSettings.waitTime)
-			end
-		end
-	})
-
-
-	-- PVP
-
-	local playerDropdown = Tabs.PVP:AddDropdown("MultiDropdown", {
-		Title = "Player List",
-		Description = "Select Players For Kill Aura to Target",
-		Values = {"ERROR"},
-		Multi = true,
-		Default = {"--"},
-	})
-	
-	
-	local function UpdatePlayerDropdown()
-		local targets = {}
-		for _, v in pairs(workspace.Characters:GetChildren()) do
-			if v.Name == Character.Name then continue end
-			table.insert(targets, v.Name)
-		end
-		playerDropdown:SetValues({})
-		playerDropdown:SetValues(targets)
-		
-	end
-	
-	
-	UpdatePlayerDropdown()
-
-	playerDropdown:OnChanged(function(Value)
-		local Values = {}
-		for Value, State in next, Value do
-			table.insert(Values, Value)
-		end
-		PVPSettings.targets = Values
-	end)
-
-	local speedSlider = Tabs.PVP:AddSlider("Slider", {
-		Title = "Kill Aura Speed",
-		Description = "Time between swings",
-		Default = 0.35,
-		Min = 0.3,
-		Max = 1,
-		Rounding = 2,
-		Callback = function(Value)
-			PVPSettings.waitTime = Value
-		end
-	})
-
-	local rangeSlider = Tabs.PVP:AddSlider("Slider", {
-		Title = "Kill Aura Range",
-		Description = "Set How Far Kill Aura Reaches",
-		Default = 20,
-		Min = 10,
-		Max = 200,
-		Rounding = 1,
-		Callback = function(Value)
-			PVPSettings.range = Value
-		end
-	})
-	local playerToggle = Tabs.PVP:AddToggle("MyToggle", {
-		Title = "Target Players",
-		Description = "Kill Aura Effects Players",
-		Default = false ,
-		Callback = function(Value)
-			PVPSettings.active = Value
-			
-			while PVPSettings.active  do
-
-				local parms = OverlapParams.new()
-
-				parms.FilterDescendantsInstances = workspace.Characters:GetChildren()
-				parms.FilterType = Enum.RaycastFilterType.Include
-
-				if not Humrp then continue end -- Continues if no Humrp
-				local playersInRange = workspace:GetPartBoundsInRadius(Humrp.Position, PVPSettings.range, parms)
-
-				local playersToHit = {}
-
-				--Loops Through And Gets Mob To Hit
-				for _, v in pairs(playersInRange) do
-					local target = v.Parent
-					if target:IsA("Model") and table.find(PVPSettings.targets, target.Name) then
-						local PlayerRP = target.HumanoidRootPart
-						if not PlayerRP then continue end -- Continues if MobRP doesn't exist
-						PlayerRP.Size = Vector3.new(PVPSettings.range*2, PVPSettings.range*2,PVPSettings.range*2)
-						PlayerRP.CanCollide = false
-						table.insert(playersToHit, target)
-					end
-				end
-
-				game:GetService("ReplicatedStorage").Systems.Combat.PlayerAttack:FireServer(playersToHit)
-
-
-				wait(PVPSettings.waitTime)
-			end
-		end
-	})
-	local playerToggle = Tabs.PVP:AddToggle("MyToggle", {
-		Title = "Auto Selected Players",
-		Description = "Enabled/Disabled to Farm Selected Player",
-		Default = false ,
-		Callback = function(Value)
-			PVPSettings.autofarm = Value
-			while PVPSettings.autofarm do
-
-				for _, v in pairs(workspace.Characters:GetChildren()) do
-					if table.find(PVPSettings.targets, v.Name) and PVPSettings.autofarm then
-						local playerHumrp = v.PrimaryPart
-						if not playerHumrp then continue end -- Skips If Mob Is Dead
-						local playerCFrame = playerHumrp.CFrame
-						local offset = CFrame.new(0,5,0)
-						local weld = Instance.new("WeldConstraint", playerHumrp)
-
-
-
-						local Tween = TS:Create(Humrp, TweenInfo.new(1), {CFrame = playerCFrame * offset})
-						Tween:Play()
-						Tween.Completed:Connect(function()
-							weld.Part0 = playerHumrp
-							weld.Part1 = Humrp
-						end)
-
-						local Timer = 0
-
-						repeat 
-							task.wait(0.5) 
-							Timer += 0.5
-						until v.Parent == nil or not PVPSettings.autofarm or Timer > 5 -- Possible Bug Here
-
-						if weld then weld:Destroy() end -- Destroys weld if player turned off autofarm before killing mob
-					end
-
-				end
-				wait(1)
-
-			end
-		end
-	})
-	local refreshButton = Tabs.PVP:AddButton({
-		Title = "Refresh",
-		Description = "Refreshes Player List",
-		Callback = function()
-			UpdatePlayerDropdown()
-		end,
-	})
-
-
-
-
-	-- Teleport Tab
-	local ArenaDropdown = Tabs.Teleports:AddDropdown("Dropdown", {
-		Title = "Boss Arenas",
-		Description = "Chose Arena to Teleport To",
-		Values = Bosses[game.PlaceId],
-		Multi = false,
-		Default = "--"
-	})
 	local FloorDropdown = Tabs.Teleports:AddDropdown("Dropdown", {
 		Title = "Floor Teleport",
 		Description = "Chose Floor to Teleport To",
@@ -605,7 +625,7 @@ do
 		Multi = false,
 		Default = "--"
 	})
-	
+
 	local playerTPDropdown = Tabs.Teleports:AddDropdown("Dropdown", {
 		Title = "Teleport To Player",
 		Description = "Chose Player to Teleport To",
@@ -613,8 +633,8 @@ do
 		Multi = false,
 		Default = "--"
 	})
-	
-	
+
+
 	local function UpdatePlayerTP()
 		local targets = {}
 		for _, v in pairs(workspace.Characters:GetChildren()) do
@@ -625,23 +645,14 @@ do
 		playerTPDropdown:SetValues(targets)
 
 	end
-	
+
 	UpdatePlayerTP()
-	
-	
-	
-	ArenaDropdown:OnChanged(function(Value)
-		if Value == "--" then return end
-		local BossArenaFolder = workspace["BossArenas"][Value]
-		local Position = BossArenaFolder["Spawn"].Position
-		Character:MoveTo(Position)
-	end)
 
 	FloorDropdown:OnChanged(function(Value)
 		if Value == "--" then return end
 		game:GetService("TeleportService"):Teleport(Floors[Value])
 	end)
-	
+
 	playerTPDropdown:OnChanged(function(Value)
 		if Value == "--" then return end
 		local player = workspace["Characters"][Value]
@@ -649,7 +660,7 @@ do
 		local Position = CharRP.Position
 		Character:MoveTo(Position)
 	end)
-	
+
 	local refreshTPButton = Tabs.Teleports:AddButton({
 		Title = "Refresh",
 		Description = "Refreshes Player List",
@@ -657,8 +668,8 @@ do
 			UpdatePlayerTP()
 		end,
 	})
-	
-	
+
+
 	-- Stats
 	Tabs.PlayerStats:AddButton({
 		Title = "Vel Earned",
@@ -678,9 +689,9 @@ do
 			})
 		end
 	})
-	
+
 	-- MISC
-	
+
 	local invSpyDropdown = Tabs.Misc:AddDropdown("Dropdown", {
 		Title = "Select Player",
 		Description = "Spy on Player's Inventory",
@@ -702,7 +713,7 @@ do
 	end
 
 	UpdatePlayerSpy()
-	
+
 	local refreshSpyButton = Tabs.Misc:AddButton({
 		Title = "Refresh",
 		Description = "Refreshes Player List",
@@ -710,13 +721,13 @@ do
 			UpdatePlayerTP()
 		end,
 	})
-	
-	
+
+
 	local paragraph = Tabs.Misc:AddParagraph({
 		Title = "Player Info"
 	})
 
-	
+
 	invSpyDropdown:OnChanged(function(Value)
 		if Value == "--" then return end
 		local playerInv = game.ReplicatedStorage["Profiles"][Value]
@@ -738,12 +749,12 @@ do
 				inventory[v.Name] = 1
 			end
 		end
-		
+
 		local dialogueMessage = "Player's Vel: "..vel.." vel\n-----------------------------------\n\nPlayer Inventory:\n-----------------------------------\n"
 		for key, value in pairs(inventory) do
-			 dialogueMessage = dialogueMessage..key..": x"..value.."\n"
+			dialogueMessage = dialogueMessage..key..": x"..value.."\n"
 		end
-		
+
 		paragraph:Destroy()
 		paragraph = Tabs.Misc:AddParagraph({
 			Title = Value.."'s Inventory",
@@ -751,12 +762,17 @@ do
 		})
 
 	end)
-	
-	
-	
+
+
+
 	-- Settings Tab
 	InterfaceManager:SetLibrary(Fluent)
 	InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 
 
 end
+
+
+
+
+
