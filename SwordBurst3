@@ -718,7 +718,7 @@ do
 		Title = "Refresh",
 		Description = "Refreshes Player List",
 		Callback = function()
-			UpdatePlayerTP()
+			UpdatePlayerSpy()
 		end,
 	})
 
