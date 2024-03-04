@@ -730,7 +730,7 @@ do
 
 	invSpyDropdown:OnChanged(function(Value)
 		if Value == "--" then return end
-		local playerInv = game.ReplicatedStorage["Profiles"][Value]
+		local playerInv = game.ReplicatedStorage["Profiles"]:FindFirstChild(Value)
 		if not playerInv then
 			paragraph:Destroy()
 			paragraph = Tabs.Misc:AddParagraph({
