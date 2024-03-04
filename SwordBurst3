@@ -1,4 +1,4 @@
-local VersionNumber = "1.4.3"
+local VersionNumber = "1.4.4"
 
 local MobsList = {
 	[14819490378] = {
@@ -201,6 +201,10 @@ local PVPSettings = {
 	autofarm = false
 }
 
+local FarmStats = {
+	startingVel = game.ReplicatedStorage.Profiles[Character.Name].Vel.Value,
+}
+
 
 
 
@@ -234,6 +238,7 @@ local Tabs = {
 	Combat = Window:AddTab({ Title = "Combat (Mobs)", Icon = "ghost" }),
 	PVP = Window:AddTab({ Title = "Combat (PVP) WIP", Icon = "swords" }),
 	Teleports = Window:AddTab({ Title = "Teleports", Icon = "map-pin" }),
+	PlayerStats = Window:AddTab({ Title = "Stats", Icon = "trending-up" }),
 	Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
 }
 
@@ -280,8 +285,6 @@ do
 						local offset = CFrame.new(0,0,0)
 						local weld = Instance.new("WeldConstraint", mobHumrp)
 
-						print(Humrp.CFrame)
-
 						if AutoFarmConfig.direction == "Below" then
 							offset = CFrame.new(0,(AutoFarmConfig.distance + 13)* -1 ,0)
 						elseif AutoFarmConfig.direction == "Above"  then
@@ -303,7 +306,8 @@ do
 							task.wait(0.5) 
 							Timer += 0.5
 						until v.Parent == nil or not AutoFarmOptions.mobToggleOn or Timer > 15 -- Possible Bug Here
-
+						
+						
 						if weld then weld:Destroy() end -- Destroys weld if player turned off autofarm before killing mob
 					end
 
@@ -340,7 +344,6 @@ do
 
 				for _, v in pairs(game.ReplicatedStorage.Drops:GetChildren()) do
 					if v:IsA("Folder")  then
-						print(v.Name)
 						game:GetService("ReplicatedStorage").Systems.Drops.Pickup:FireServer(v)
 					end
 				end
@@ -406,8 +409,6 @@ do
 		Callback = function(Value)
 			CombatSettings.active = Value
 			Humrp.CanCollide = not Value
-			print("Kill Aura")
-			print(Value)
 			while CombatSettings.active  do
 
 				local parms = OverlapParams.new()
@@ -656,7 +657,30 @@ do
 		end,
 	})
 	
+	
+	-- Stats
+	Tabs.PlayerStats:AddButton({
+		Title = "Vel Earned",
+		Description = "Press to Check How Much Vel You've Earned",
+		Callback = function()
+			Window:Dialog({
+				Title = "Vel Farmed",
+				Content = "You have earned "..(game.ReplicatedStorage.Profiles[Character.Name].Vel.Value - FarmStats.startingVel).." Vel Since Injecting",
+				Buttons = {
+					{
+						Title = "Ok",
+						Callback = function()
+							print("Confirmed the dialog.")
+						end
+					},
+				}
+			})
+		end
+	})
 
+	
+	
+	
 	-- Settings Tab
 	InterfaceManager:SetLibrary(Fluent)
 	InterfaceManager:BuildInterfaceSection(Tabs.Settings)
