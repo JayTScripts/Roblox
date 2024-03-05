@@ -1,4 +1,4 @@
-local VersionNumber = "1.5.2"
+local VersionNumber = "v1.6"
 
 local MobsList = {
 	[14819490378] = {
@@ -220,7 +220,7 @@ local FarmStats = {
 
 
 local Window = Fluent:CreateWindow({
-	Title = "Jason HUB v"..VersionNumber,
+	Title = "Jay's Script HUB v"..VersionNumber,
 	SubTitle = "| SwordBurst 3",
 	TabWidth = 160,
 	Size = UDim2.fromOffset(580, 460),
@@ -413,22 +413,18 @@ if game.PlaceId ~= Floors["New Arcadia"] then
 				Humrp.CanCollide = not Value
 				while CombatSettings.active  do
 
-					local parms = OverlapParams.new()
-
-					parms.FilterDescendantsInstances = workspace["Mobs"]:GetChildren()
-
-					parms.FilterType = Enum.RaycastFilterType.Include
 
 					if not Humrp then continue end -- Continues if no Humrp
-					local mobsInRange = workspace:GetPartBoundsInRadius(Humrp.Position, CombatSettings.range, parms)
-
+					
+					local mobsInRange = workspace["Mobs"]:GetChildren()
 					local MobsToHit = {}
 
 					--Loops Through And Gets Mob To Hit
 					for _, v in pairs(mobsInRange) do
-						local Mob = v.Parent
+						local Mob = v
+						if not Mob then continue end
 						if Mob:IsA("Model") then
-							local MobRP = Mob.HumanoidRootPart
+							local MobRP = Mob:FindFirstChild("HumanoidRootPart")
 							if not MobRP then continue end -- Continues if MobRP doesn't exist
 							MobRP.Size = Vector3.new(CombatSettings.range*2,CombatSettings.range*2,CombatSettings.range*2)
 							MobRP.CanCollide = false
@@ -718,7 +714,7 @@ do
 		Title = "Refresh",
 		Description = "Refreshes Player List",
 		Callback = function()
-			UpdatePlayerSpy()
+			UpdatePlayerTP()
 		end,
 	})
 
