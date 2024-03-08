@@ -1,4 +1,4 @@
-local VersionNumber = "v1.6"
+local VersionNumber = "1.7"
 
 local MobsList = {
 	[14819490378] = {
@@ -38,8 +38,11 @@ local MobsList = {
 		"Chill Bat",
 		"Polar Bear",
 		"Cold Mammoth",
+		"Ice Wraith",
+		"Icewhal",
 		"Alpha Icewhal",
-		"Yeti"
+		"Yeti",
+		"Elize The Siren"
 	},
 }
 
@@ -56,7 +59,8 @@ local Bosses = {
 	},
 	[16582687738] = {
 		"Alpha Icewhal",
-		"Yeti"
+		"Yeti",
+		"Elize The Siren"
 	},
 }
 
@@ -99,6 +103,10 @@ local Quests = {
 		"Melting The Ice [LVL 51]",
 		"Polar Plunge [LVL 56]",
 		"Massive Mammoths [LVL 58]",
+		"The Ice Tower [LVL 60]",
+		"Floating Terrors [LVL 60]",
+		"Frozen Beasts [LVL 62]",
+		"The Undead Siren [LVL 63]",
 	},
 }
 
@@ -142,6 +150,10 @@ local QuestEquivalency = {
 	["Melting The Ice [LVL 51]"] = 31,
 	["Polar Plunge [LVL 56]"] = 32,
 	["Massive Mammoths [LVL 58]"] = 33,
+	["The Ice Tower [LVL 60]"] = 34,
+	["Floating Terrors [LVL 60]"] = 35,
+	["Frozen Beasts [LVL 62]"] = 36,
+	["The Undead Siren [LVL 63]"] = 37,
 
 }
 
